@@ -1,6 +1,6 @@
 cocos2d/
 bin/
-
+Resources/
 # vs
 # more https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 .vs/
@@ -14,6 +14,7 @@ bin/
 *.pdb
 *.pgc
 *.pgd
+*.png
 *.rsp
 *.sbr
 *.tlb
