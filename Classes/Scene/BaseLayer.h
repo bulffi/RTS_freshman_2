@@ -4,6 +4,7 @@
 #include"helpscene.h"
 #include"settingsScene.h"
 #include"SimpleAudioEngine.h"
+#include"loginScnen.h"
 USING_NS_CC;
 class BaseLayer : public cocos2d::Layer
 {

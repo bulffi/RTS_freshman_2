@@ -1,5 +1,6 @@
 #include "AppDelegate.h"
 //#include "HelloWorldScene.h"
+#include"Scene\loadingScene.h"
 #include"SimpleAudioEngine.h"
 #include"Classes\Scene\BaseLayer.h"
 
@@ -97,7 +98,7 @@ bool AppDelegate::applicationDidFinishLaunching() {
     register_all_packages();
 
     // create a scene. it's an autorelease object
-    auto scene = BaseLayer::createScene();
+    auto scene = loadingScene::createScene();
 
     // run
     director->runWithScene(scene);

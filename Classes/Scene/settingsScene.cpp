@@ -61,6 +61,15 @@ bool settingsScene::init()
 	addChild(labbel_backgroundMusic);
 	addChild(labbel_connection);
 	addChild(labbel_effectMusic);
+	auto BackEventListener = EventListenerKeyboard::create();
+	BackEventListener->onKeyReleased = [&](EventKeyboard::KeyCode code, Event* event)
+	{
+		if (code == EventKeyboard::KeyCode::KEY_ESCAPE)
+		{
+			Director::getInstance()->popScene();
+		}
+	};
+	_eventDispatcher->addEventListenerWithSceneGraphPriority(BackEventListener, this);
 	auto OnMenuItem = MenuItemImage::create("scene/switch_on-256.png",
 		"scene/switch_on-256.png");
 	auto OffMenuItem=MenuItemImage::create("scene/switch_off-256.png",

@@ -100,7 +100,9 @@ bool BaseLayer::init()
 
 void BaseLayer::menuPlayCallback(Ref* pSender)
 {
-	
+	auto login = loginScene::createScene();
+	auto reScene = TransitionFade::create(1.0f, login);
+	Director::getInstance()->pushScene(reScene);
 }
 void BaseLayer::menuHelpCallback(Ref* pSender)
 {
