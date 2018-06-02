@@ -1,9 +1,7 @@
-#ifdef WIN32
-#define _WIN32_WINNT 0x0501
-#include <stdio.h>
-#endif
+#ifndef __CLIENT_H__
+#define __CLIENT_H__
 
-#include"stdafx.h"
+
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
 #include <boost/asio.hpp>
@@ -11,6 +9,8 @@
 #include <boost/enable_shared_from_this.hpp>
 #include<deque>
 #include<iostream>
+#include<thread>
+#include"cocos2d.h"
 using namespace boost::asio;
 io_service service;
 
@@ -18,15 +18,6 @@ io_service service;
 #define MEM_FN1(x,y)    boost::bind(&self_type::x, shared_from_this(),y)
 #define MEM_FN2(x,y,z)  boost::bind(&self_type::x, shared_from_this(),y,z)
 
-/** simple connection to server:
-- logs in just with username (no password)
-- all connections are initiated by the client: client asks, server answers
-- server disconnects any client that hasn't pinged for 5 seconds
-
-Possible requests:
-- gets a list of all connected clients
-- ping: the server answers either with "ping ok" or "ping client_list_changed"
-*/
 class talk_to_svr : public boost::enable_shared_from_this<talk_to_svr>
 	, boost::noncopyable {
 	typedef talk_to_svr self_type;
@@ -35,7 +26,7 @@ class talk_to_svr : public boost::enable_shared_from_this<talk_to_svr>
 	void start(ip::tcp::endpoint ep) {
 		sock_.async_connect(ep, MEM_FN1(on_connect, _1));
 	}
-	
+
 public:
 	typedef boost::system::error_code error_code;
 	typedef boost::shared_ptr<talk_to_svr> ptr;
@@ -67,8 +58,14 @@ public:
 	bool started() { return started_; }
 private:
 	void on_connect(const error_code & err) {
-		if (!err)      do_write("login " + username_ + "$");
-		else            stop();
+		if (!err)
+		{
+			log("get my server");
+			do_write("login " + username_ + "$");
+			
+		}
+		else            
+			stop();
 	}
 	void on_read(const error_code & err, size_t bytes) {
 		if (err) stop();
@@ -78,9 +75,9 @@ private:
 		msg.pop_back();
 		if (msg.find("login_ok") == 0)
 			on_login(msg);
-		else if (msg.find("ping ok") == 0) 
+		else if (msg.find("ping ok") == 0)
 			on_ping_ok();
-		else if (msg.find("clients ") == 0) 
+		else if (msg.find("clients ") == 0)
 			on_clients(msg);
 		else if (msg.find("client_list_changed") == 0)
 			do_ask_clients();
@@ -98,12 +95,12 @@ private:
 		//std::cout << "i have sth to record" << msg << std::endl;
 		while (in >> tempt)
 		{
-			message_to_accept.push_back(tempt); 
-		//	std::cout << tempt << std::endl;;
+			message_to_accept.push_back(tempt);
+			//	std::cout << tempt << std::endl;;
 		}
 		do_ping();
 
-		
+
 	}
 	void on_ask_what_happend()
 	{
@@ -117,6 +114,7 @@ private:
 		int id = std::atoi(tempt.c_str());
 		user_id = std::make_pair(username_, id);
 		//do_ask_clients();
+		//log("i am logging in");
 		do_ping();
 	}
 	void on_ping_ok() {
@@ -138,7 +136,7 @@ private:
 	}
 	void on_clients(const std::string & msg) {
 		std::string clients = msg.substr(8);
-	//	std::cout << username_ << ", new client list:" << clients << std::endl;
+		//	std::cout << username_ << ", new client list:" << clients << std::endl;
 		do_ping();
 	}
 
@@ -181,31 +179,20 @@ private:
 	std::pair<std::string, int> user_id;
 	//deadline_timer timer_;
 };
-void run_client()
+void run()
 {
 	service.run();
 }
-int main(int argc, char* argv[]) {
-	// connect several clients
-	ip::tcp::endpoint ep(ip::address::from_string("127.0.0.1"), 8001);
-	char* names[] = { "John", "James", "Lucy", "Tracy", "Frank", "Abby", 0 };
-	//for (char ** name = names; *name; ++name) {
-	std::string tempt;
-	std::cin >> tempt;
-	auto my_client=talk_to_svr::start(ep, tempt);
-		//boost::this_thread::sleep(boost::posix_time::millisec(100));
-	//}
-
-	std::thread  client_side(run_client);
-	while (1)
-	{
-		std::string tempt;
-		std::getline(std::cin, tempt);
-		my_client->write(tempt);
-		std::cout << my_client->read();
-	}
-	system("pause");
+void run_client()
+{
+	std::thread  t(run);
+	t.detach();
 }
+
+#endif
+
+
+
 
 
 

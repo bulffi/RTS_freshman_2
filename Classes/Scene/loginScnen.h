@@ -1,8 +1,10 @@
 #ifndef __login_Scnen__H__
 #define __login_Scene__H__
+#include"choose_to_beScene.h"
 #include"cocos2d.h"
 #include"ui\CocosGUI.h"
 #include"cocos-ext.h"
+#include"choose_to_beScene.h"
 USING_NS_CC;
 USING_NS_CC_EXT;
 class loginScene :public cocos2d::Layer,public EditBoxDelegate
