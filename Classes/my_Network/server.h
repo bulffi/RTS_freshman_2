@@ -24,7 +24,7 @@ array clients;
 #define MEM_FN1(x,y)    boost::bind(&self_type::x, shared_from_this(),y)
 #define MEM_FN2(x,y,z)  boost::bind(&self_type::x, shared_from_this(),y,z)
 
-
+std::string the_true_and_only_host_name;
 void update_changes(int);
 
 /** simple connection to server:
@@ -87,14 +87,19 @@ private:
 			//	std::cout << "i am asked what happend" << std::endl;
 			on_broadcast();
 		}
+		else if (msg.find("who_are_you") == 0)on_tell_host();
 		else on_something_to_say(msg);
 
+	}
+	void on_tell_host()
+	{
+		do_write("my_name_is"+the_true_and_only_host_name + "$");
 	}
 	void on_something_to_say(std::string msg)
 	{
 		std::istringstream in(msg);
 		std::string tempt;
-		while (in >> tempt)
+		while (in>>tempt)
 		{
 			for (auto client : clients)
 			{
@@ -116,12 +121,18 @@ private:
 			messages_to_send.pop_front();
 		}
 		tempt += "$";
-		std::cout << username_ << " is broadcast " << tempt << std::endl;
+		//std::cout << username_ << " is broadcast " << tempt << std::endl;
 		do_write(tempt);
 	}
 	void on_login(const std::string & msg) {
 		std::istringstream in(msg);
-		in >> username_ >> username_;
+		in >> username_>>username_;
+		//std::getline(in,username_);
+		//username_.erase(0);
+		if (clients.size() == 1)
+		{
+			the_true_and_only_host_name = username_;
+		}
 		std::cout << username_ << " logged in" << std::endl;
 		std::string tempt = std::to_string(clients.size());
 		user_id = std::make_pair(username_, clients.size());
@@ -131,7 +142,7 @@ private:
 	}
 	void on_ping() {
 		//	std::cout << username_ << "ping" << std::endl;
-		//log("client in touch");
+//		log( (username_+"client in touch").c_str());
 		switch (status)
 		{
 		case(0) : do_write("ping ok$");  break;
@@ -159,8 +170,9 @@ private:
 		boost::posix_time::ptime now = boost::posix_time::microsec_clock::local_time();
 		if ((now - last_ping).total_milliseconds() > 5000) {
 			std::cout << "stopping " << username_ << " - no ping in time" << std::endl;
-			stop();
+			//stop();
 		}
+//		log("ponst %d", (now - last_ping).total_milliseconds());
 		last_ping = boost::posix_time::microsec_clock::local_time();
 	}
 	void post_check_ping() {
@@ -175,6 +187,8 @@ private:
 	void do_read() {
 		async_read(sock_, buffer(read_buffer_),
 			MEM_FN2(read_complete, _1, _2), MEM_FN2(on_read, _1, _2));
+		//on_check_ping();
+		
 		post_check_ping();
 	}
 	void do_write(const std::string & msg) {
@@ -201,6 +215,7 @@ private:
 	deadline_timer timer_;
 	boost::posix_time::ptime last_ping;
 	int status;
+	
 };
 
 void update_changes(int status) {

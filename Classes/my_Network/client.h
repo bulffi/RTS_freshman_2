@@ -12,8 +12,8 @@
 #include<thread>
 #include"cocos2d.h"
 using namespace boost::asio;
-io_service service;
 
+//io_service service;
 #define MEM_FN(x)       boost::bind(&self_type::x, shared_from_this())
 #define MEM_FN1(x,y)    boost::bind(&self_type::x, shared_from_this(),y)
 #define MEM_FN2(x,y,z)  boost::bind(&self_type::x, shared_from_this(),y,z)
@@ -21,7 +21,7 @@ io_service service;
 class talk_to_svr : public boost::enable_shared_from_this<talk_to_svr>
 	, boost::noncopyable {
 	typedef talk_to_svr self_type;
-	talk_to_svr(const std::string & username)
+	talk_to_svr(const std::string & username,io_service& service)
 		: sock_(service), started_(true), username_(username) {}
 	void start(ip::tcp::endpoint ep) {
 		sock_.async_connect(ep, MEM_FN1(on_connect, _1));
@@ -30,8 +30,8 @@ class talk_to_svr : public boost::enable_shared_from_this<talk_to_svr>
 public:
 	typedef boost::system::error_code error_code;
 	typedef boost::shared_ptr<talk_to_svr> ptr;
-	static ptr start(ip::tcp::endpoint ep, const std::string & username) {
-		ptr new_(new talk_to_svr(username));
+	static ptr start(ip::tcp::endpoint ep, const std::string & username,io_service& service) {
+		ptr new_(new talk_to_svr(username,service));
 		new_->start(ep);
 		return new_;
 	}
@@ -41,6 +41,7 @@ public:
 	}
 	std::string read()
 	{
+		int a = 0;
 		if (!message_to_accept.empty())
 		{
 			std::string tempt = message_to_accept.front();
@@ -60,7 +61,7 @@ private:
 	void on_connect(const error_code & err) {
 		if (!err)
 		{
-			log("get my server");
+			cocos2d::log("get my server");
 			do_write("login " + username_ + "$");
 			
 		}
@@ -73,6 +74,7 @@ private:
 		// process the msg
 		std::string msg(read_buffer_, bytes);
 		msg.pop_back();
+	//	log(msg.c_str());
 		if (msg.find("login_ok") == 0)
 			on_login(msg);
 		else if (msg.find("ping ok") == 0)
@@ -93,7 +95,7 @@ private:
 		std::istringstream in(msg);
 		std::string tempt;
 		//std::cout << "i have sth to record" << msg << std::endl;
-		while (in >> tempt)
+		while (in>>tempt)
 		{
 			message_to_accept.push_back(tempt);
 			//	std::cout << tempt << std::endl;;
@@ -136,6 +138,8 @@ private:
 	}
 	void on_clients(const std::string & msg) {
 		std::string clients = msg.substr(8);
+	//	log(clients.c_str());
+		message_to_accept.push_back(clients);
 		//	std::cout << username_ << ", new client list:" << clients << std::endl;
 		do_ping();
 	}
@@ -156,6 +160,9 @@ private:
 	}
 	void do_write(const std::string & msg) {
 		if (!started()) return;
+	//	log("i am writing");
+		//typedef std::chrono::duration<int, std::milli> millisecond;
+		//std::this_thread::sleep_for(millisecond(15));
 		std::copy(msg.begin(), msg.end(), write_buffer_);
 		sock_.async_write_some(buffer(write_buffer_, msg.size()),
 			MEM_FN2(on_write, _1, _2));
@@ -179,15 +186,7 @@ private:
 	std::pair<std::string, int> user_id;
 	//deadline_timer timer_;
 };
-void run()
-{
-	service.run();
-}
-void run_client()
-{
-	std::thread  t(run);
-	t.detach();
-}
+
 
 #endif
 

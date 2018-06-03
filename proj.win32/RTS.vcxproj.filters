@@ -27,6 +27,8 @@
     <ClCompile Include="..\Classes\Scene\loginScene.cpp" />
     <ClCompile Include="..\Classes\Scene\loadingScene.cpp" />
     <ClCompile Include="..\Classes\Scene\choose_to_beScene.cpp" />
+    <ClCompile Include="..\Classes\Scene\roomScene.cpp" />
+    <ClCompile Include="..\Classes\Scene\searchScene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="main.h">
@@ -46,6 +48,8 @@
     <ClInclude Include="..\Classes\Scene\choose_to_beScene.h" />
     <ClInclude Include="..\Classes\my_Network\client.h" />
     <ClInclude Include="..\Classes\my_Network\server.h" />
+    <ClInclude Include="..\Classes\Scene\roomScene.h" />
+    <ClInclude Include="..\Classes\Scene\searchScene.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="game.rc">
