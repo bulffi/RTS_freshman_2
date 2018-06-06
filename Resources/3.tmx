@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" tiledversion="2018.05.24" orientation="orthogonal" renderorder="right-down" width="10" height="10" tilewidth="32" tileheight="32" infinite="0" nextlayerid="2" nextobjectid="1">
+ <tileset firstgid="1" source="dg_edging132.tsx"/>
+ <tileset firstgid="129" source="../../../../programming/tiled/tiles/dg_edging1321.tsx"/>
+ <tileset firstgid="257" source="dg_grounds32.tsx"/>
+ <tileset firstgid="428" source="Pdg_edging132.tsx"/>
+ <layer id="1" name="块层 1" width="10" height="10">
+  <data encoding="csv">
+549,549,549,549,549,549,549,549,549,549,
+549,549,549,549,549,549,549,549,549,549,
+549,549,250,549,549,549,549,549,549,549,
+549,549,549,549,549,549,549,549,549,549,
+549,549,549,549,549,549,549,549,549,549,
+549,549,549,549,549,549,549,549,549,549,
+549,549,549,549,549,549,549,549,549,549,
+549,549,549,549,549,549,549,549,549,549,
+549,549,549,549,549,549,549,549,549,549,
+549,549,549,549,549,549,549,549,549,549
+</data>
+ </layer>
+</map>
