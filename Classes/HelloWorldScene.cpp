@@ -208,6 +208,6 @@ void HelloWorld::menuItemsettingCallback(Ref* pSender)
 
 void HelloWorld::menuItemgoCallback(Ref* pSender)
 {
-	auto sc = go::createscene();
+	auto sc = ground::createscene();
 	Director::getInstance()->pushScene(sc);
 }

@@ -2,13 +2,13 @@
 
 USING_NS_CC;
 
-Scene* go::createscene()
+Scene* ground::createscene()
 {
 	// 'scene' is an autorelease object
 	auto scene = Scene::create();
 
 	// 'layer' is an autorelease object
-	auto layer = go::create();
+	auto layer = ground::create();
 
 	// add layer as a child to scene
 	scene->addChild(layer);
@@ -17,12 +17,12 @@ Scene* go::createscene()
 	return scene;
 }
 
-void go::menuCloseCallback(cocos2d::Ref* pSender)
+void ground::menuCloseCallback(cocos2d::Ref* pSender)
 {
 	Director::getInstance()->popScene();
 }
 
-bool go::init()
+bool ground::init()
 {
 	if (!Layer::init())
 	{
@@ -35,7 +35,7 @@ bool go::init()
 	auto closeItem = MenuItemImage::create(
 		"CloseNormal.png",
 		"CloseSelected.png",
-		CC_CALLBACK_1(go::menuCloseCallback, this));
+		CC_CALLBACK_1(ground::menuCloseCallback, this));
 
 		float x = origin.x + visibleSize.width - closeItem->getContentSize().width / 2;
 		float y = origin.y + closeItem->getContentSize().height / 2;
@@ -48,36 +48,81 @@ bool go::init()
 	////////////
 	tilemap = TMXTiledMap::create("map/first.tmx");
 	addChild(tilemap, 0,100);
+	mospos = tilemap->getPosition();
 	/////////////
-	setTouchEnabled(true);
-	setTouchMode(Touch::DispatchMode::ONE_BY_ONE);
+	//setTouchEnabled(true);
+	//setTouchMode(Touch::DispatchMode::ONE_BY_ONE);
 
 	return true;
 }
 
-/*void go::onEnter()
+void ground::onEnter()
 {
 	Layer::onEnter();
-	auto listener = EventListenerTouchOneByOne::create();
-	listener->setSwallowTouches(true);
-	listener->onTouchBegan = CC_CALLBACK_2(go::onTouchBegan, this);
-	listener->onTouchMoved = CC_CALLBACK_2(go::onTouchMoved, this);
-	listener->onTouchEnded = CC_CALLBACK_2(go::onTouchEnded, this);
+	auto listener = EventListenerMouse::create();
 
-}*/
+	mospos0 = tilemap->getPosition();
 
-bool go::onTouchBegan(cocos2d::Touch* touch, cocos2d::Event* event)
+	listener->onMouseDown = [&](Event* event)
+	{
+		EventMouse* e = (EventMouse*)event;
+		m_bdrag = true;
+		mospos1.set(e->getCursorX(), e->getCursorY());  //记录鼠标点击时的位置
+	};
+	listener->onMouseMove = [&](Event* event)
+	{
+		EventMouse* e = (EventMouse*)event;
+		/*if (m_bdrag == true)
+		{
+			
+		}*/
+	};
+
+	listener->onMouseUp = [&](Event* event)
+	{
+		EventMouse* e = (EventMouse*)event;
+		mospos2.set(e->getCursorX(), e->getCursorY());  //记录鼠标抬起时位置
+		mospos0 = mospos0 - mospos1 + mospos2;          //根据鼠标偏移量改变地图位置
+
+		float mapWidth = tilemap->getMapSize().width*tilemap->getTileSize().width;
+		log("%f", mapWidth);
+		float mapHeight = tilemap->getMapSize().width*tilemap->getTileSize().height;
+		log("%f", mapHeight);
+		Vec2 winSize = CCDirector::sharedDirector()->getWinSize();//屏幕大小
+		log("%f %f", winSize.x, winSize.y);
+		cocos2d::Vec2 posmax = Vec2(winSize.x / 2, winSize.y / 2);
+		cocos2d::Vec2 posmin = Vec2(-mapWidth + winSize.x / 2, -mapHeight + winSize.y / 2);
+
+		//判断是否拖出地图边界
+		if (mospos0.x < posmin.x)
+			mospos0.x = posmin.x;
+		if (mospos0.x > posmax.x)
+			mospos0.x = posmax.x;
+		if (mospos0.y < posmin.y)
+			mospos0.y = posmin.y;
+		if (mospos0.y > posmax.y)
+			mospos0.y = posmax.y;
+
+		tilemap->setPosition(mospos0);
+		m_bdrag = false;
+	};
+	EventDispatcher* eventDispatcher = Director::getInstance()->getEventDispatcher();
+	eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
+
+}
+
+/*bool ground::onMouseUp( cocos2d::Event* event)
 {
 	log("ontouchbegan");
 	return true;
 }
 
-void go::onTouchMoved(cocos2d::Touch* touch, cocos2d::Event* event)
+void ground::onMouseMove( cocos2d::Event* event)
 {
 	log("ontouchmoved");
 }
 
-void go::onTouchEnded(cocos2d::Touch* touch, cocos2d::Event* event)
+void ground::onMouseDown( cocos2d::Event* event)
 {
-	this->setPosition(touch->getDelta());
-}
+	this->setPosition(->getDelta());
+}*/
