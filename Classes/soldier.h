@@ -18,14 +18,10 @@ public:
 	soldier* enemy_target = 0;//即将攻击的目标
 
 	static soldier* create(const char* filename);//构造函数
-	void update(float dt) override;//单位碰撞
 	void updateMove(float dt);//移向敌军
 	void updateAttack(float dt);//攻击敌军
 	void move_all_time(float dt);//仅限测验使用，以后要删掉，让敌人不停移动
 	int move_direction = 1;//仅限测验使用，以后要删掉
-	//void updateHealth(float dt);//监测生命值
-	float my_positionX;
-	float my_positionY;
 	cocos2d::Action* move_action = 0;//移动动作
 	cocos2d::Action* attack_action = 0;//攻击动作
 	cocos2d::Action* be_attack = 0;//被攻击动作

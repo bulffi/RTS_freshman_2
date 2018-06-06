@@ -14,12 +14,18 @@ USING_NS_CC;
 Scene* HelloWorld::createScene()
 {
 	
-	auto scene = Scene::create();
+	//auto scene = Scene::create();
+
+	auto scene = Scene::createWithPhysics();
+	//scene->getPhysicsWorld()->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_ALL);
+	cocos2d::Vect gravity(0, 0.0f);
+	scene->getPhysicsWorld()->setGravity(gravity);
+
     auto layer = HelloWorld::create();
     scene->addChild(layer);
     return scene;
-	
 }
+
 bool HelloWorld::init()
 {
     if ( !Layer::init() )
@@ -27,9 +33,15 @@ bool HelloWorld::init()
         return false;
     }
     
-    auto visibleSize = Director::getInstance()->getVisibleSize();
-	
+	auto visibleSize = Director::getInstance()->getVisibleSize();
     cocos2d::Vec2 origin = Director::getInstance()->getVisibleOrigin();
+
+	//定义世界的边界
+	auto body = PhysicsBody::createEdgeBox(visibleSize, PHYSICSBODY_MATERIAL_DEFAULT, 5.0f);
+	auto edgeNode = Node::create();
+	edgeNode->setPosition(cocos2d::Vec2(origin.x + visibleSize.width / 2, origin.y + visibleSize.height / 2));
+	edgeNode->setPhysicsBody(body);
+	this->addChild(edgeNode);
 
 	
 	//创建菜单按钮
@@ -177,10 +189,15 @@ void HelloWorld::menuItem1Callback(cocos2d::Ref* pSender)//创建一个友方单位
 	cocos2d::Vec2 origin = Director::getInstance()->getVisibleOrigin();
 
 	soldier* a_soldier = soldier::create("CloseSelected.png");
+	//物理引擎
+	auto body = PhysicsBody::createCircle(a_soldier->getContentSize().width / 2);
+	//body->setContactTestBitmask(0xFFFFFFFF);
+	a_soldier->setPhysicsBody(body);
+
 	vec_soldier.pushBack(a_soldier);
 	a_soldier->setPosition(cocos2d::Vec2(a_soldier->getContentSize().width/2 + origin.x, visibleSize.height / 2 + origin.y));
 	this->addChild(a_soldier, 0);
-	//a_soldier->scheduleUpdate();//打开更新器（需要优化）
+	
 };
 void HelloWorld::menuItem2Callback(cocos2d::Ref* pSender)//创建一个敌方单位
 {

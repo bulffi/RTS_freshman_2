@@ -16,30 +16,6 @@ soldier* soldier::create(const char* filename)
 	return nullptr;
 }
 
-void soldier::update(float dt)//（需要优化）
-{
-	//获得本单位的rect
-	cocos2d::Rect rect1 = this->getBoundingBox();
-	int num_cover = 0;
-	for (int i = 0;i <= HelloWorld::vec_soldier.size() - 1;i++)
-	{
-		//获得另外一个单位的rect
-		cocos2d::Rect rect2 = HelloWorld::vec_soldier.at(i)->getBoundingBox();
-		if (rect1.intersectsRect(rect2))
-		{
-			num_cover++;
-			if (num_cover > 1)
-			{
-				this->stopAllActions();
-				this->setPositionX(my_positionX);
-				this->setPositionY(my_positionY);
-				break;
-			}
-		}
-	}
-	my_positionX = this->getPositionX();
-	my_positionY = this->getPositionY();
-}
 
 //追赶敌人的调度器
 void soldier::updateMove(float dt)
@@ -79,7 +55,7 @@ void soldier::updateAttack(float dt)
 		if (distance <= attack_distance)//如果敌军在攻击范围内
 		{
 			//攻击
-			this->attack_action = JumpBy::create(0.3, Vec2(0, 0), 10, 1);
+			this->attack_action = JumpBy::create(0.3f, Vec2(0, 0), 10, 1);
 			this->runAction(this->attack_action);
 			
 			enemy_target->stopAction(enemy_target->be_attack);
