@@ -90,6 +90,8 @@ void choose_to_beScene::hostCallback(Ref* pSender)
 	talk_to_client::ptr client = talk_to_client::new_();
 	acceptor.async_accept(client->sock(), boost::bind(handle_accept, client, _1));
 	run_server();
+
+
 	ip::tcp::endpoint ep(ip::address::from_string("127.0.0.1"), 8001);
 
 	

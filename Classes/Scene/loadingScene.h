@@ -6,6 +6,8 @@ USING_NS_CC;
 class loadingScene : public cocos2d::Layer 
 {
 public:
+	//cocos2d::TMXTiledMap* tilemap;
+ 
 	static cocos2d::Scene*createScene();
 	virtual bool init();
 	CREATE_FUNC(loadingScene);

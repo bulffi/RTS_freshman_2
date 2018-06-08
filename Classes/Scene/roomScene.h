@@ -8,11 +8,13 @@
 //#include"my_Network\client.h"
 #include"ui\CocosGUI.h"
 USING_NS_CC;
+
 class roomScene : public cocos2d::Layer
 {
 	//bool am_i_host;
-	typedef std::tuple<std::string, int, int> player_imfor;
-	std::vector<player_imfor> players;
+
+	//typedef std::tuple<std::string, int, int> player_imfor;
+	//std::vector<player_imfor> players;
 	void tell_map_changed(Ref *pSender);
 	void tell_nation_changed(Ref *pSender);
 	void tell_team_changed(Ref *pSender);
@@ -24,7 +26,7 @@ public:
 	static cocos2d::Scene*createScene(talk_to_svr::ptr,bool,std::string,std::string);
 	virtual bool init();
 	CREATE_FUNC(roomScene);
-
+	virtual void update(float dt) override;
 
 
 

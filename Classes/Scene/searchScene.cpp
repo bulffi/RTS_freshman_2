@@ -1,5 +1,6 @@
 #include"cocos2d.h"
 #include"searchScene.h"
+#include"roomScene.h"
 #include<vector>
 #include<string>
 USING_NS_CC;
@@ -43,7 +44,7 @@ bool searchScene::init()
 }
 void searchScene::joinCallback(Ref* pSender)
 {
-	pClient_2->write(name_of_mine + " want_to_join$");
+	pClient_2->write("want_to_join"+name_of_mine+"$");
 
 }
 void searchScene::update(float dt)
@@ -75,23 +76,14 @@ void searchScene::update(float dt)
 			mn->setPosition(0.0f, 0.0f);
 			this->addChild(mn);
 		}
-		if (tempt.find(name_of_mine) == 0)
+		if (tempt.find("join") == 0)
 		{
-			std::istringstream in(tempt);
-			std::string answer;
-			in >> answer>>answer;
-			if (answer.find("join") == 0)
-			{
-				std::istringstream further(answer);
-				std::string require;
-				in >> require >> require;
-
-
-
-
-			}
-
-
+			this->unschedule(schedule_selector(searchScene::update));
+			std::string host_to_join = tempt.substr(sizeof("join" - 1));
+			auto help = roomScene::createScene(pClient_2, 0, host_to_join,
+				UserDefault::getInstance()->getStringForKey("UserName"));
+			auto reScene = TransitionFade::create(1.0f, help);
+			Director::getInstance()->replaceScene(reScene);
 		}
 
 

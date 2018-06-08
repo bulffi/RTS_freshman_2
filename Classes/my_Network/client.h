@@ -1,7 +1,6 @@
 #ifndef __CLIENT_H__
 #define __CLIENT_H__
 
-
 #include <boost/thread.hpp>
 #include <boost/bind.hpp>
 #include <boost/asio.hpp>
@@ -10,6 +9,8 @@
 #include<deque>
 #include<iostream>
 #include<thread>
+#include<mutex>
+#include<atomic>
 #include"cocos2d.h"
 using namespace boost::asio;
 
@@ -30,18 +31,21 @@ class talk_to_svr : public boost::enable_shared_from_this<talk_to_svr>
 public:
 	typedef boost::system::error_code error_code;
 	typedef boost::shared_ptr<talk_to_svr> ptr;
-	static ptr start(ip::tcp::endpoint ep, const std::string & username,io_service& service) {
+	static ptr start(ip::tcp::endpoint ep, const std::string & username,io_service& service) 
+	{
 		ptr new_(new talk_to_svr(username,service));
 		new_->start(ep);
 		return new_;
 	}
 	void write(std::string msg)
 	{
+		std::lock_guard<std::mutex> lg(send_lock);
 		message_to_send.push_back(msg);
 	}
 	std::string read()
 	{
 		int a = 0;
+		std::lock_guard<std::mutex> lg(accept_lock);
 		if (!message_to_accept.empty())
 		{
 			std::string tempt = message_to_accept.front();
@@ -63,7 +67,8 @@ private:
 		{
 			cocos2d::log("get my server");
 			do_write("login " + username_ + "$");
-			
+			cocos2d::log("get my server");
+
 		}
 		else            
 			stop();
@@ -74,7 +79,8 @@ private:
 		// process the msg
 		std::string msg(read_buffer_, bytes);
 		msg.pop_back();
-	//	log(msg.c_str());
+		if(msg!= "ping ok")
+		cocos2d::log(("client read "+msg).c_str());
 		if (msg.find("login_ok") == 0)
 			on_login(msg);
 		else if (msg.find("ping ok") == 0)
@@ -92,14 +98,14 @@ private:
 	}
 	void on_record(std::string msg)
 	{
+		std::lock_guard<std::mutex> lg(accept_lock);
 		std::istringstream in(msg);
 		std::string tempt;
 		//std::cout << "i have sth to record" << msg << std::endl;
-		while (in>>tempt)
-		{
-			message_to_accept.push_back(tempt);
+		std::getline(in, tempt);
+		message_to_accept.push_back(tempt);
 			//	std::cout << tempt << std::endl;;
-		}
+		
 		do_ping();
 
 
@@ -127,18 +133,20 @@ private:
 		else
 		{
 			std::string tempt;
-			while (!message_to_send.empty())
+			std::lock_guard<std::mutex> lg(send_lock);
+			if (!message_to_send.empty())
 			{
-				tempt += message_to_send.front() + " ";
+				tempt += message_to_send.front();
 				message_to_send.pop_front();
 			}
-			tempt += "$";
+			//tempt += "$";
 			do_write(tempt);
 		}
 	}
 	void on_clients(const std::string & msg) {
 		std::string clients = msg.substr(8);
 	//	log(clients.c_str());
+		std::lock_guard<std::mutex> lg(send_lock);
 		message_to_accept.push_back(clients);
 		//	std::cout << username_ << ", new client list:" << clients << std::endl;
 		do_ping();
@@ -160,9 +168,10 @@ private:
 	}
 	void do_write(const std::string & msg) {
 		if (!started()) return;
-	//	log("i am writing");
-		//typedef std::chrono::duration<int, std::milli> millisecond;
-		//std::this_thread::sleep_for(millisecond(15));
+		if(msg!="ping$")
+			cocos2d::log(("client write " + msg).c_str());
+	//	typedef std::chrono::duration<int, std::milli> millisecond;
+	//	std::this_thread::sleep_for(millisecond(15));
 		std::copy(msg.begin(), msg.end(), write_buffer_);
 		sock_.async_write_some(buffer(write_buffer_, msg.size()),
 			MEM_FN2(on_write, _1, _2));
@@ -175,14 +184,17 @@ private:
 	}
 
 private:
+	
 	ip::tcp::socket sock_;
 	enum { max_msg = 1024 };
 	char read_buffer_[max_msg];
 	char write_buffer_[max_msg];
 	bool started_;
 	std::string username_;
-	std::deque<std::string> message_to_send;
+	std::deque<std::string>message_to_send;
 	std::deque<std::string> message_to_accept;
+	std::mutex send_lock;
+	std::mutex accept_lock;
 	std::pair<std::string, int> user_id;
 	//deadline_timer timer_;
 };

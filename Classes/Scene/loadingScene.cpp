@@ -41,6 +41,10 @@ bool loadingScene::init()
 		Director::getInstance()->replaceScene(reScene);
 	};
 	_eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
+
+	//tilemap = TMXTiledMap::create("map2/test.tmx");
+	//addChild(tilemap, 0, 100);
+
 }
 void loadingScene::onClickCallBack(Ref* pSender)
 {

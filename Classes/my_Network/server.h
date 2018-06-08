@@ -10,11 +10,10 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include<thread>
-
+#include<mutex>
 using namespace boost::asio;
 using namespace boost::posix_time;
 io_service service_2;
-
 class talk_to_client;
 typedef boost::shared_ptr<talk_to_client> client_ptr;
 typedef std::vector<client_ptr> array;
@@ -78,7 +77,8 @@ private:
 		// process the msg
 		std::string msg(read_buffer_, bytes);
 		msg.pop_back();
-		//std::cout <<"on read" <<msg << std::endl;
+		if (msg != "ping")
+			log(("server read from " + username_ + " " +msg).c_str());
 		if (msg.find("login ") == 0) on_login(msg);
 		else if (msg.find("ping") == 0) on_ping();
 		else if (msg.find("ask_clients") == 0) on_clients();
@@ -88,24 +88,100 @@ private:
 			on_broadcast();
 		}
 		else if (msg.find("who_are_you") == 0)on_tell_host();
+		else if (msg.find("whoin") == 0)tell_about_room();
+		else if (msg.find("want_to_join") == 0)on_want_to_join();
 		else on_something_to_say(msg);
 
 	}
+	void tell_about_room()
+	{
+
+		std::string answer;
+		answer += "client_in_room ";
+		std::string tempt;
+		for (auto client : clients)
+		{
+			if (client->if_in_host_room)
+			{
+				tempt = std::to_string(nation) + std::to_string(team) + client->username_;
+				answer += tempt + " ";
+			}
+		}
+		answer += "$";
+		do_write(answer);
+
+	}
+	void on_want_to_join()
+	{
+		int count = 0;
+		for (auto client : clients)
+		{
+			if (client->if_in_host_room)
+			{
+				count++;
+			}
+		}
+		if (count <= 4)
+		{
+			if_in_host_room = 1;
+			for (auto &client : clients)
+			{
+				if (client->if_in_host_room)
+				{
+					for (auto in_room_client : clients)
+					{
+						if (in_room_client->if_in_host_room)
+						{
+							std::lock_guard<std::mutex> lg(player_lock);
+							client->players.push_back(player_imfor(in_room_client->username_, nation, team));
+						}
+					}
+				}
+			}
+			std::string answer;
+			answer += "client_in_room ";
+			std::string tempt;
+			for (auto client : clients)
+			{
+				if (client->if_in_host_room)
+				{
+					tempt = std::to_string(nation) + std::to_string(team) + client->username_;
+					answer += tempt + " ";
+				}
+			}
+			answer += "$";
+			for (auto &client : clients)
+			{
+				if (client->if_in_host_room)
+				{
+					std::lock_guard<std::mutex> lg(send_lock);
+					client->messages_to_send.push_back(answer);
+				}
+			}
+			update_changes(2);
+			do_write("join" + the_true_and_only_host_name + "$");
+		}
+		else
+		{
+			do_write("no_room$");
+		}
+	}
 	void on_tell_host()
 	{
-		do_write("my_name_is"+the_true_and_only_host_name + "$");
+		do_write("my_name_is" + the_true_and_only_host_name + "$");
 	}
 	void on_something_to_say(std::string msg)
 	{
 		std::istringstream in(msg);
 		std::string tempt;
-		while (in>>tempt)
+		while (in >> tempt)
 		{
-			for (auto client : clients)
+			for (auto &client : clients)
 			{
+				std::lock_guard<std::mutex> lg(send_lock);
 				client->messages_to_send.push_back(tempt);
 			}
-			std::cout << tempt << std::endl;;
+			//std::cout << tempt << std::endl;;
 		}
 		update_changes(2);
 		do_write("something_happend$");
@@ -114,24 +190,29 @@ private:
 	void on_broadcast()
 	{
 		std::string tempt;
+		std::lock_guard<std::mutex> lg(send_lock);
 
-		while (!messages_to_send.empty())
+		if (!messages_to_send.empty())
 		{
-			tempt += messages_to_send.front() + " ";
+			tempt += messages_to_send.front();
 			messages_to_send.pop_front();
 		}
-		tempt += "$";
+		//tempt += "$";
 		//std::cout << username_ << " is broadcast " << tempt << std::endl;
 		do_write(tempt);
 	}
 	void on_login(const std::string & msg) {
 		std::istringstream in(msg);
-		in >> username_>>username_;
+		in >> username_ >> username_;
 		//std::getline(in,username_);
 		//username_.erase(0);
+		cocos2d::log("on_login");
 		if (clients.size() == 1)
 		{
+			std::lock_guard<std::mutex> lg(player_lock);
 			the_true_and_only_host_name = username_;
+			if_in_host_room = 1;
+			players.push_back(player_imfor(username_, 0, 0));
 		}
 		std::cout << username_ << " logged in" << std::endl;
 		std::string tempt = std::to_string(clients.size());
@@ -142,7 +223,7 @@ private:
 	}
 	void on_ping() {
 		//	std::cout << username_ << "ping" << std::endl;
-//		log( (username_+"client in touch").c_str());
+		//		log( (username_+"client in touch").c_str());
 		switch (status)
 		{
 		case(0) : do_write("ping ok$");  break;
@@ -172,7 +253,7 @@ private:
 			std::cout << "stopping " << username_ << " - no ping in time" << std::endl;
 			//stop();
 		}
-//		log("ponst %d", (now - last_ping).total_milliseconds());
+		//		log("ponst %d", (now - last_ping).total_milliseconds());
 		last_ping = boost::posix_time::microsec_clock::local_time();
 	}
 	void post_check_ping() {
@@ -188,12 +269,15 @@ private:
 		async_read(sock_, buffer(read_buffer_),
 			MEM_FN2(read_complete, _1, _2), MEM_FN2(on_read, _1, _2));
 		//on_check_ping();
-		
-		post_check_ping();
+
+		//post_check_ping();
 	}
 	void do_write(const std::string & msg) {
 		if (!started()) return;
+		typedef std::chrono::duration<int, std::milli> millisecond;
 		std::copy(msg.begin(), msg.end(), write_buffer_);
+		if(msg!="ping ok$")
+			log(("server write to "+username_+" "+ msg).c_str());
 		sock_.async_write_some(buffer(write_buffer_, msg.size()),
 			MEM_FN2(on_write, _1, _2));
 	}
@@ -211,11 +295,17 @@ private:
 	bool started_;
 	std::string username_;
 	std::pair<std::string, int> user_id;
+	std::mutex send_lock;
+	std::mutex player_lock;
 	std::deque<std::string> messages_to_send;
 	deadline_timer timer_;
 	boost::posix_time::ptime last_ping;
+	bool if_in_host_room = false;
 	int status;
-	
+	typedef std::tuple<std::string, int, int> player_imfor;
+	std::vector<player_imfor> players;
+	int nation = 0;
+	int team = 0;
 };
 
 void update_changes(int status) {
@@ -233,12 +323,14 @@ void handle_accept(talk_to_client::ptr client, const boost::system::error_code &
 void run_()
 {
 	log("run server");
+	//log("sflkas");
 	service_2.run();
+	//log("how");
 }
 void run_server()
 {
 	std::thread  t(run_);
 	t.detach();
 }
-	
+
 #endif
