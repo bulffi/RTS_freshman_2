@@ -1,6 +1,6 @@
 #include"cocos2d.h"
 #include"loginScnen.h"
-
+#include"utility\information.h"
 USING_NS_CC;
 Scene* loginScene::createScene()
 {
@@ -10,7 +10,14 @@ Scene* loginScene::createScene()
 	scene->addChild(layer);
 	return scene;
 }
-
+std::string imformation::myname="";
+bool imformation::am_i_host=false;
+bool imformation::am_i_in_room=false;
+std::string imformation::my_host_name="";
+bool imformation::my_nation=0;
+bool imformation::my_team=false;
+int imformation::my_number=0;
+std::vector<std::tuple<std::string, bool, bool>> imformation::guest_list;
 // Print useful error message instead of segfaulting when files are not there.
 static void problemLoading(const char* filename)
 {
@@ -19,6 +26,7 @@ static void problemLoading(const char* filename)
 }
 bool loginScene::init()
 {
+	
 	if (!Layer::init())
 	{
 		return 0;
@@ -76,6 +84,8 @@ void loginScene::OKCallback(Ref* pSender)
 {
 	if (_playerName.length())
 	{
+
+		imformation::myname = _playerName;
 		UserDefault::getInstance()->setStringForKey("UserName", _playerName);
 		auto sc = choose_to_beScene::createScene();
 		auto reScene = TransitionFade::create(1.0f, sc);

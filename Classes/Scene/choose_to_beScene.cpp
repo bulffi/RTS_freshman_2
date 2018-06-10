@@ -4,6 +4,7 @@
 #include"roomScene.h"
 #include"searchScene.h"
 #include"my_Network\client.h"
+#include"utility\information.h"
 #include"my_Network\server.h"
 USING_NS_CC;
 Scene* choose_to_beScene::createScene()
@@ -50,7 +51,7 @@ bool choose_to_beScene::init()
 	{
 		if (code == EventKeyboard::KeyCode::KEY_SPACE)
 		{
-			to_check();
+			//to_check();
 		}
 	};
 	_eventDispatcher->addEventListenerWithSceneGraphPriority(BackEventListener, this);
@@ -61,56 +62,29 @@ bool choose_to_beScene::init()
 	return 1;
 
 }
-io_service service;
-void run()
-{
-	service.run();
-}
-void run_client()
-{
-	std::thread  t(run);
-	t.detach();
-}
-
 void choose_to_beScene::gustCallback(Ref* pSender)
 {
-	
-	ip::tcp::endpoint ep(ip::address::from_string("127.0.0.1"), 8001);
-	auto my_client = talk_to_svr::start(ep, UserDefault::getInstance()->getStringForKey("UserName"),service);
-	run_client();
+	imformation::am_i_host = false;
+	imformation::am_i_in_room = false;
+	auto my_client = client::create();
 	auto help=searchScene::createScene(my_client);
 	auto reScene = TransitionFade::create(1.0f, help);
 	Director::getInstance()->pushScene(reScene);
-	//enter search scene.
 }
-talk_to_svr::ptr my_client;
 void choose_to_beScene::hostCallback(Ref* pSender)
 {
-	//io_service service;
-	talk_to_client::ptr client = talk_to_client::new_();
-	acceptor.async_accept(client->sock(), boost::bind(handle_accept, client, _1));
-	run_server();
+	imformation::am_i_host = true;
+	imformation::am_i_in_room = true;
+	imformation::my_host_name = imformation::myname;
+	imformation::guest_list.push_back(std::make_tuple(imformation::myname,false,false));
+	auto server=LocalServer::create();
+	this->addChild(server);
 
-
-	ip::tcp::endpoint ep(ip::address::from_string("127.0.0.1"), 8001);
-
-	
-	my_client = talk_to_svr::start(ep, UserDefault::getInstance()->getStringForKey("UserName"),service);
-	//auto my_client_2 = talk_to_svr::start(ep, "zzj");
-	run_client();
-	//boost::thread t(boost::bind(&boost::asio::io_service::run, &service));
-	//t.detach();
-
+	auto my_client = client::create();
 	log("something happend");
-	auto help = roomScene::createScene(my_client,1,UserDefault::getInstance()->getStringForKey("UserName"),
-		UserDefault::getInstance()->getStringForKey("UserName"));
+	auto help = roomScene::createScene(my_client);
 	auto reScene = TransitionFade::create(1.0f, help);
 	Director::getInstance()->pushScene(reScene);
 	
 
-}
-void to_check()
-{
-	std::string tempt = my_client->read();
-	log(tempt.c_str());
 }

@@ -7,6 +7,7 @@
 #include"my_Network\client.h"
 //#include"my_Network\client.h"
 #include"ui\CocosGUI.h"
+#include"utility\information.h"
 USING_NS_CC;
 
 class roomScene : public cocos2d::Layer
@@ -21,9 +22,14 @@ class roomScene : public cocos2d::Layer
 	cocos2d::ui::TextField* _chatWindow;
 	void textFieldEvent(Ref *pSender, cocos2d::ui::TextField::EventType type);
 	void send_message(Ref *pSender);
+	void shut_down_callback(Ref *pSender)
+	{
+		auto this_buttom = dynamic_cast<cocos2d::ui::Button*>(pSender);
+		this->removeChild(this_buttom);
+	}
 	//talk_to_svr::ptr pClient;
 public:
-	static cocos2d::Scene*createScene(talk_to_svr::ptr,bool,std::string,std::string);
+	static cocos2d::Scene*createScene(client*);
 	virtual bool init();
 	CREATE_FUNC(roomScene);
 	virtual void update(float dt) override;

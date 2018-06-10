@@ -68,7 +68,7 @@ bool AppDelegate::applicationDidFinishLaunching() {
 #endif
         director->setOpenGLView(glview);
     }
-	glview->setFrameZoomFactor(2.1);
+	glview->setFrameZoomFactor(2.2);
     // turn on display FPS
     director->setDisplayStats(true);
 

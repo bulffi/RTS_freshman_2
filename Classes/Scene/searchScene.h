@@ -8,7 +8,7 @@ class searchScene :public cocos2d::Layer
 	void update(float dt) override ;
 	void joinCallback(Ref* pSender);
 public:
-	static cocos2d::Scene* createScene(talk_to_svr::ptr);
+	static cocos2d::Scene* createScene(client*);
 	virtual bool init();
 	CREATE_FUNC(searchScene);
 

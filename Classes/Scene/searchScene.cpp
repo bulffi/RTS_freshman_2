@@ -5,10 +5,10 @@
 #include<string>
 USING_NS_CC;
 std::vector<std::string> host_names;
-talk_to_svr::ptr pClient_2;
+client* pClient_2;
 std::string name_of_mine;
 int room_count;
-Scene* searchScene::createScene(talk_to_svr::ptr ptr_client)
+Scene* searchScene::createScene(client* ptr_client)
 
 {
 	pClient_2 = ptr_client;
@@ -34,33 +34,26 @@ bool searchScene::init()
 	circle->setScale(0.4, 0.4);
 	this->addChild(circle, 1);
 	circle->runAction(RepeatForever::create(RotateBy::create(1, 360)));
-	pClient_2->write("who_are_you$");//if a real ´óÌü it should be a vector!!
-
-
-	
-	
+	pClient_2->sendMessage("who_are_you");//if a real ´óÌü it should be a vector!!
 	this->scheduleUpdate();
 	return true;
 }
 void searchScene::joinCallback(Ref* pSender)
 {
-	pClient_2->write("want_to_join"+name_of_mine+"$");
+	pClient_2->sendMessage("want_to_join"+name_of_mine);
 
 }
 void searchScene::update(float dt)
 {
 	auto visibleSize = Director::getInstance()->getVisibleSize();
 	Vec2 origin = Director::getInstance()->getVisibleOrigin();
-	std::string tempt = pClient_2->read();
+	std::string tempt=pClient_2->executeOrder();
 	if (tempt != "no")
 	{
 		if (tempt.find("my_name_is")==0)
 		{
 			std::istringstream in(tempt);
 			std::string hostname(tempt.substr(sizeof("my_name_is")-1));
-			
-			//std::getline(in, hostname);
-			//hostname.erase(hostname.front());
 			room_count++;
 			auto room_name = Label::create(hostname.c_str(), "fonts/Marker Felt.ttf", 70);
 			room_name->setColor(Color3B(0, 0, 0));
@@ -80,8 +73,12 @@ void searchScene::update(float dt)
 		{
 			this->unschedule(schedule_selector(searchScene::update));
 			std::string host_to_join = tempt.substr(sizeof("join" - 1));
-			auto help = roomScene::createScene(pClient_2, 0, host_to_join,
-				UserDefault::getInstance()->getStringForKey("UserName"));
+			imformation::am_i_host = false;
+			imformation::my_host_name = host_to_join;
+			imformation::am_i_in_room = true;
+			typedef std::chrono::duration<int, std::milli> millisecond;
+			std::this_thread::sleep_for(millisecond(90));
+			auto help = roomScene::createScene(pClient_2);
 			auto reScene = TransitionFade::create(1.0f, help);
 			Director::getInstance()->replaceScene(reScene);
 		}

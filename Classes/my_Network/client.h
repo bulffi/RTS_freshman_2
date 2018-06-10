@@ -1,205 +1,142 @@
 #ifndef __CLIENT_H__
 #define __CLIENT_H__
 
-#include <boost/thread.hpp>
-#include <boost/bind.hpp>
+//
+// chat_client.cpp
+// ~~~~~~~~~~~~~~~
+//
+// Copyright (c) 2003-2017 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+//
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+//
+#define _CRT_SECURE_NO_WARNINGS
+#include <cstdlib>
+#include <deque>
+#include <iostream>
+#include <thread>
 #include <boost/asio.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/enable_shared_from_this.hpp>
-#include<deque>
-#include<iostream>
-#include<thread>
-#include<mutex>
-#include<atomic>
+#include "chat_message.h"
 #include"cocos2d.h"
-using namespace boost::asio;
+using boost::asio::ip::tcp;
 
-//io_service service;
-#define MEM_FN(x)       boost::bind(&self_type::x, shared_from_this())
-#define MEM_FN1(x,y)    boost::bind(&self_type::x, shared_from_this(),y)
-#define MEM_FN2(x,y,z)  boost::bind(&self_type::x, shared_from_this(),y,z)
+typedef std::deque<chat_message> chat_message_queue;
 
-class talk_to_svr : public boost::enable_shared_from_this<talk_to_svr>
-	, boost::noncopyable {
-	typedef talk_to_svr self_type;
-	talk_to_svr(const std::string & username,io_service& service)
-		: sock_(service), started_(true), username_(username) {}
-	void start(ip::tcp::endpoint ep) {
-		sock_.async_connect(ep, MEM_FN1(on_connect, _1));
-	}
-
+class chat_client
+{
 public:
-	typedef boost::system::error_code error_code;
-	typedef boost::shared_ptr<talk_to_svr> ptr;
-	static ptr start(ip::tcp::endpoint ep, const std::string & username,io_service& service) 
+	chat_client(boost::asio::io_service& io_service,
+		tcp::resolver::iterator endpoint_iterator)
+		: io_service_(io_service),
+		socket_(io_service)
 	{
-		ptr new_(new talk_to_svr(username,service));
-		new_->start(ep);
-		return new_;
+		do_connect(endpoint_iterator);
 	}
-	void write(std::string msg)
-	{
-		std::lock_guard<std::mutex> lg(send_lock);
-		message_to_send.push_back(msg);
-	}
-	std::string read()
-	{
-		int a = 0;
-		std::lock_guard<std::mutex> lg(accept_lock);
-		if (!message_to_accept.empty())
-		{
-			std::string tempt = message_to_accept.front();
-			message_to_accept.pop_front();
-			return tempt;
-		}
-		return "no";
-	}
-	void stop() {
-		if (!started_) return;
-		//std::cout << "stopping " << username_ << std::endl;
-		started_ = false;
-		sock_.close();
-	}
-	bool started() { return started_; }
-private:
-	void on_connect(const error_code & err) {
-		if (!err)
-		{
-			cocos2d::log("get my server");
-			do_write("login " + username_ + "$");
-			cocos2d::log("get my server");
 
-		}
-		else            
-			stop();
-	}
-	void on_read(const error_code & err, size_t bytes) {
-		if (err) stop();
-		if (!started()) return;
-		// process the msg
-		std::string msg(read_buffer_, bytes);
-		msg.pop_back();
-		if(msg!= "ping ok")
-		cocos2d::log(("client read "+msg).c_str());
-		if (msg.find("login_ok") == 0)
-			on_login(msg);
-		else if (msg.find("ping ok") == 0)
-			on_ping_ok();
-		else if (msg.find("clients ") == 0)
-			on_clients(msg);
-		else if (msg.find("client_list_changed") == 0)
-			do_ask_clients();
-		else if (msg.find("something_happend") == 0)
-			on_ask_what_happend();
-		else
-		{
-			on_record(msg);
-		}
-	}
-	void on_record(std::string msg)
+	void write(const chat_message& msg)
 	{
-		std::lock_guard<std::mutex> lg(accept_lock);
-		std::istringstream in(msg);
-		std::string tempt;
-		//std::cout << "i have sth to record" << msg << std::endl;
-		std::getline(in, tempt);
-		message_to_accept.push_back(tempt);
-			//	std::cout << tempt << std::endl;;
-		
-		do_ping();
-
-
-	}
-	void on_ask_what_happend()
-	{
-		do_write("what_happend$");
-	}
-	void on_login(std::string msg) {
-		//std::cout << username_ << " logged in" << std::endl;
-		std::string tempt;
-		std::istringstream in(msg);
-		in >> tempt >> tempt;
-		int id = std::atoi(tempt.c_str());
-		user_id = std::make_pair(username_, id);
-		//do_ask_clients();
-		//log("i am logging in");
-		do_ping();
-	}
-	void on_ping_ok() {
-		if (message_to_send.empty())
+		io_service_.post(
+			[this, msg]()
 		{
-			do_ping();
-		}
-		else
-		{
-			std::string tempt;
-			std::lock_guard<std::mutex> lg(send_lock);
-			if (!message_to_send.empty())
+			bool write_in_progress = !write_msgs_.empty();
+			write_msgs_.push_back(msg);
+			if (!write_in_progress)
 			{
-				tempt += message_to_send.front();
-				message_to_send.pop_front();
+				do_write();
 			}
-			//tempt += "$";
-			do_write(tempt);
-		}
-	}
-	void on_clients(const std::string & msg) {
-		std::string clients = msg.substr(8);
-	//	log(clients.c_str());
-		std::lock_guard<std::mutex> lg(send_lock);
-		message_to_accept.push_back(clients);
-		//	std::cout << username_ << ", new client list:" << clients << std::endl;
-		do_ping();
+		});
 	}
 
-	void do_ping() {
-		do_write("ping$");
-	}
-	void do_ask_clients() {
-		do_write("ask_clients$");
-	}
-
-	void on_write(const error_code & err, size_t bytes) {
-		do_read();
-	}
-	void do_read() {
-		async_read(sock_, buffer(read_buffer_),
-			MEM_FN2(read_complete, _1, _2), MEM_FN2(on_read, _1, _2));
-	}
-	void do_write(const std::string & msg) {
-		if (!started()) return;
-		if(msg!="ping$")
-			cocos2d::log(("client write " + msg).c_str());
-	//	typedef std::chrono::duration<int, std::milli> millisecond;
-	//	std::this_thread::sleep_for(millisecond(15));
-		std::copy(msg.begin(), msg.end(), write_buffer_);
-		sock_.async_write_some(buffer(write_buffer_, msg.size()),
-			MEM_FN2(on_write, _1, _2));
-	}
-	size_t read_complete(const boost::system::error_code & err, size_t bytes) {
-		if (err) return 0;
-		bool found = std::find(read_buffer_, read_buffer_ + bytes, '$') < read_buffer_ + bytes;
-		// we read one-by-one until we get to enter, no buffering
-		return found ? 0 : 1;
+	void close()
+	{
+		io_service_.post([this]() { socket_.close(); });
 	}
 
 private:
-	
-	ip::tcp::socket sock_;
-	enum { max_msg = 1024 };
-	char read_buffer_[max_msg];
-	char write_buffer_[max_msg];
-	bool started_;
-	std::string username_;
-	std::deque<std::string>message_to_send;
-	std::deque<std::string> message_to_accept;
-	std::mutex send_lock;
-	std::mutex accept_lock;
-	std::pair<std::string, int> user_id;
-	//deadline_timer timer_;
+	void do_connect(tcp::resolver::iterator endpoint_iterator)
+	{
+		boost::asio::async_connect(socket_, endpoint_iterator,
+			[this](boost::system::error_code ec, tcp::resolver::iterator)
+		{
+			if (!ec)
+			{
+				do_read_header();
+			}
+		});
+	}
+
+	void do_read_header()
+	{
+		boost::asio::async_read(socket_,
+			boost::asio::buffer(read_msg_.data(), chat_message::header_length),
+			[this](boost::system::error_code ec, std::size_t /*length*/)
+		{
+			if (!ec && read_msg_.decode_header())
+			{
+				do_read_body();
+			}
+			else
+			{
+				socket_.close();
+			}
+		});
+	}
+
+	void do_read_body();
+
+	void do_write()
+	{
+		boost::asio::async_write(socket_,
+			boost::asio::buffer(write_msgs_.front().data(),
+				write_msgs_.front().length()),
+			[this](boost::system::error_code ec, std::size_t /*length*/)
+		{
+			if (!ec)
+			{
+				write_msgs_.pop_front();
+				if (!write_msgs_.empty())
+				{
+					do_write();
+				}
+			}
+			else
+			{
+				socket_.close();
+			}
+		});
+	}
+
+private:
+	boost::asio::io_service& io_service_;
+	tcp::socket socket_;
+	chat_message read_msg_;
+	chat_message_queue write_msgs_;
 };
 
+class client : public cocos2d::Node
+{
+public:		
+	chat_client*                _clientInstance;       
+	std::mutex                  t_lock;                    
+	std::deque<std::string>     _orderList;         											
+	static client* create()
+	{
+		auto client_ptr = new client{};
+		//client *sprite = new client();
+		if (client_ptr)
+		{
+			client_ptr->runclient();
 
+			return client_ptr;
+		}
+		CC_SAFE_DELETE(client_ptr);
+		return nullptr;
+	}
+	void runclient();
+	std::string executeOrder();
+	void sendMessage(const std::string & message);
+	int Client_();
+};
 #endif
 
 
