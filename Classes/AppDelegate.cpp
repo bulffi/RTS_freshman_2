@@ -3,7 +3,7 @@
 #include"Scene\loadingScene.h"
 #include"SimpleAudioEngine.h"
 #include"Classes\Scene\BaseLayer.h"
-
+#include"Scene\HelloWorldScene.h"
 // #define USE_AUDIO_ENGINE 1
 // #define USE_SIMPLE_AUDIO_ENGINE 1
 
@@ -98,7 +98,7 @@ bool AppDelegate::applicationDidFinishLaunching() {
     register_all_packages();
 
     // create a scene. it's an autorelease object
-    auto scene = loadingScene::createScene();
+    auto scene = HelloWorld::createScene();
 
     // run
     director->runWithScene(scene);

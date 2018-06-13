@@ -14,6 +14,11 @@ std::vector<cocos2d::Node*> name_nation_team;
 Scene* roomScene::createScene(client* ptr_client)
 
 {
+	std::vector<std::vector<cocos2d::Sprite*>> my_big;
+	typedef std::vector<cocos2d::Sprite*> a_type_of_one_player;
+	a_type_of_one_player someone;
+	someone.push_back(cocos2d::Sprite::create());
+	my_big.push_back(someone);
 	pClient = ptr_client;
 	host_name = imformation::my_host_name;
 	my_name = imformation::myname;

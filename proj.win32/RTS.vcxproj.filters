@@ -18,9 +18,6 @@
     <ClCompile Include="..\Classes\AppDelegate.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\Classes\HelloWorldScene.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\Classes\Scene\BaseLayer.cpp" />
     <ClCompile Include="..\Classes\Scene\helpScene.cpp" />
     <ClCompile Include="..\Classes\Scene\settingsScene.cpp" />
@@ -30,15 +27,16 @@
     <ClCompile Include="..\Classes\Scene\roomScene.cpp" />
     <ClCompile Include="..\Classes\Scene\searchScene.cpp" />
     <ClCompile Include="..\Classes\my_Network\client.cpp" />
+    <ClCompile Include="..\Classes\soldier\soldier.cpp" />
+    <ClCompile Include="..\Classes\utility\open_source_Astar\micropather.cpp" />
+    <ClCompile Include="..\Classes\Scene\HelloWorldScene.cpp" />
+    <ClCompile Include="..\Classes\buliding\building.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="main.h">
       <Filter>win32</Filter>
     </ClInclude>
     <ClInclude Include="..\Classes\AppDelegate.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Classes\HelloWorldScene.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="..\Classes\Scene\BaseLayer.h" />
@@ -53,6 +51,11 @@
     <ClInclude Include="..\Classes\Scene\searchScene.h" />
     <ClInclude Include="..\Classes\my_Network\chat_message.h" />
     <ClInclude Include="..\Classes\utility\information.h" />
+    <ClInclude Include="..\Classes\Scene\gameScene.h" />
+    <ClInclude Include="..\Classes\soldier\soldier.h" />
+    <ClInclude Include="..\Classes\utility\open_source_Astar\micropather.h" />
+    <ClInclude Include="..\Classes\Scene\HelloWorldScene.h" />
+    <ClInclude Include="..\Classes\buliding\building.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="game.rc">
