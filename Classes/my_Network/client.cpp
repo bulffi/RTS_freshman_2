@@ -4,7 +4,7 @@
 #include"boost\bind.hpp"
 #include"boost\thread.hpp"
 static client* the_client;
-
+std::string ip_addr;
 void chat_client::do_read_body()
 {
 	boost::asio::async_read(socket_,
@@ -25,8 +25,9 @@ void chat_client::do_read_body()
 		}
 	});
 }
-void client::runclient()
+void client::runclient(std::string ip_addres)
 {
+	ip_addr = ip_addres;
 	the_client = this;
 	std::thread t(&client::Client_, the_client);
 	typedef std::chrono::duration<int, std::milli> millisecond;
@@ -67,7 +68,7 @@ int client::Client_()
 		boost::asio::io_service io_service;
 
 		tcp::resolver resolver(io_service);
-		auto endpoint_iterator = resolver.resolve({ "127.0.0.1", "8001" });
+		auto endpoint_iterator = resolver.resolve({ ip_addr, "8001" });
 		chat_client c(io_service, endpoint_iterator);
 
 		std::thread t([&io_service]() { io_service.run(); });

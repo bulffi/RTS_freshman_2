@@ -33,7 +33,7 @@ public:
 	virtual bool init();
 	CREATE_FUNC(roomScene);
 	virtual void update(float dt) override;
-
+	void playCallback(Ref *pSender);
 
 
 

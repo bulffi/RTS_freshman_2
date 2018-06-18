@@ -30,7 +30,7 @@ bool searchScene::init()
 	auto background_color = LayerColor::create(Color4B(255, 255, 255, 255));
 	this->addChild(background_color, -1);
 	auto circle = Sprite::create("scene/loading.png");
-	circle->setPosition(Point(visibleSize.width / 4, visibleSize.height / 2 + 100));
+	circle->setPosition(Point(visibleSize.width / 4-100, visibleSize.height / 2 + 100));
 	circle->setScale(0.4, 0.4);
 	this->addChild(circle, 1);
 	circle->runAction(RepeatForever::create(RotateBy::create(1, 360)));

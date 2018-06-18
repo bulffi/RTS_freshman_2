@@ -10,9 +10,12 @@ public:
 	CREATE_FUNC(choose_to_beScene);
 
 private:
+	void replace_callBack(Ref* pSender);
 	void gustCallback(Ref* Psender);
 	void hostCallback(Ref*);
-	void menuBackCallback(Ref*);
+	void self_callBack(Ref* pSender);
+	
+	//void menuBackCallback(Ref*);
 };
 
 

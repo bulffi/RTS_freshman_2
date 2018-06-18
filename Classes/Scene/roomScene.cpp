@@ -1,7 +1,8 @@
 #include"cocos2d.h"
 #include"roomScene.h"
 #include"ui\CocosGUI.h"
-
+#include"lose.h"
+#include"SimpleAudioEngine.h"
 USING_NS_CC;
 client* pClient;
 int which_map;
@@ -374,10 +375,34 @@ bool roomScene::init()
 		pClient->sendMessage("whoin");
 		cnt_whion++;
 	}
+	if (imformation::am_i_host)
+	{
+		auto be_a_guest = MenuItemLabel::create(Label::createWithTTF("begin", "fonts/Marker Felt.ttf", 70),
+			CC_CALLBACK_1(roomScene::playCallback, this));
+		be_a_guest->setScale(1.0);
+		be_a_guest->setPosition(Vec2(origin.x + visibleSize.width-100, origin.y + visibleSize.height*0.2));
+		be_a_guest->setColor(Color3B(0, 0, 0));
+		Menu* mn = Menu::create(be_a_guest, nullptr);
+		mn->setPosition(0.0f, 0.0f);
+		this->addChild(mn);
+	}
 	this->scheduleUpdate();
 	return true;
 }
+void roomScene::playCallback(Ref *pSender)
+{
 
+	if (imformation::guest_list.size())
+	{
+		CocosDenshion::SimpleAudioEngine::getInstance()->stopBackgroundMusic();
+		this->unschedule(schedule_selector(roomScene::update));
+		typedef std::chrono::duration<int, std::milli> millisecond;
+		std::this_thread::sleep_for(millisecond(90));
+		auto help = loseScene::createScene();
+		auto reScene = TransitionFade::create(1.0f, help);
+		Director::getInstance()->replaceScene(reScene);
+	}
+}
 std::string current_str;
 void roomScene::send_message(Ref *pSender)
 {

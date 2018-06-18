@@ -94,11 +94,11 @@ bool AppDelegate::applicationDidFinishLaunching() {
         director->setContentScaleFactor(MIN(smallResolutionSize.height/designResolutionSize.height, smallResolutionSize.width/designResolutionSize.width));
     }
 	SimpleAudioEngine::getInstance()->preloadBackgroundMusic("sound/PaintItBlack.wav");
-	SimpleAudioEngine::getInstance()->preloadEffect("sound/PaintItBlack.wav");
+	SimpleAudioEngine::getInstance()->playBackgroundMusic("sound/PaintItBlack.wav");
     register_all_packages();
 
     // create a scene. it's an autorelease object
-    auto scene = HelloWorld::createScene();
+    auto scene = loadingScene::createScene();
 
     // run
     director->runWithScene(scene);

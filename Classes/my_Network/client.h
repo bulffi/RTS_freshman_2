@@ -119,20 +119,20 @@ public:
 	chat_client*                _clientInstance;       
 	std::mutex                  t_lock;                    
 	std::deque<std::string>     _orderList;         											
-	static client* create()
+	static client* create(std::string ip_addr)
 	{
 		auto client_ptr = new client{};
 		//client *sprite = new client();
 		if (client_ptr)
 		{
-			client_ptr->runclient();
+			client_ptr->runclient(ip_addr);
 
 			return client_ptr;
 		}
 		CC_SAFE_DELETE(client_ptr);
 		return nullptr;
 	}
-	void runclient();
+	void runclient(std::string ip_addr);
 	std::string executeOrder();
 	void sendMessage(const std::string & message);
 	int Client_();
