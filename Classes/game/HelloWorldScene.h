@@ -37,12 +37,9 @@ public:
     virtual bool init();
 
 	int my_country;//阵营
-	int num_player;//玩家人数
+	int num_player=4;//玩家人数
 
-	base* base1;//1方基地
-	base* base2;//2方基地
-	base* base3;//3方基地
-	base* base4;//4方基地
+	static std::vector<base*> vec_base;
 
 	//到后面考虑改成智能指针
 	static std::vector<std::vector<people*>> vec_people;//各方的小兵
@@ -59,6 +56,7 @@ public:
 
 	std::vector<int> set_building;//是否正在建造建筑
 	std::vector<cocos2d::Vec2> mouseDownPosition;//鼠标按下的坐标
+	std::vector<cocos2d::Vec2> real_mouseDownPosition;
 	static std::vector<camp*> major_camp;//各方的主要兵营
 	static std::vector<factory*> major_factory;//各方的主要战车工厂
 
@@ -94,8 +92,7 @@ public:
 	//int money = 9999;
 	//int elec = 1000;
 	//int electotal = 1000;
-	cocos2d::Vec2 startpos;//储存初始位置
-	cocos2d::Vec2 mappos;//储存地图位置
+	
 
 	int iftogo = -1, bui_lable = -1, sol_lable = -1;//操作是否继续
 	static cocos2d::Vector<build_menu*> vec_buimenu;//储存建筑菜单的容器
@@ -116,6 +113,8 @@ public:
 	void destruct_last_solbuild(int country,char c_or_f);
 
 //	cocos2d::Vec2 move_to_GLposition(unit* penemy, int enemy_type);
+	cocos2d::Vec2 startpos;//储存初始位置
+	static std::vector<cocos2d::Vec2> vec_mappos;//储存地图位置
 
     CREATE_FUNC(HelloWorld);
 };

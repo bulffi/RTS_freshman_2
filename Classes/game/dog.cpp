@@ -19,7 +19,7 @@ void dog::set_data(int country)
 	beginhealth = 15;
 	attack_power = 2;
 	move_speed = 8;
-	attack_distance = 35;
+	attack_distance = 30;
 	attack_speed = 1.5f;
 	if (country == 1)
 	{

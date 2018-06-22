@@ -59,16 +59,6 @@ void build_menu::build(cocos2d::Vec2 pos,int country)
 {
 	if ( this->ifready[country] == 1)
 	{
-		//auto visibleSize = Director::getInstance()->getVisibleSize();
-		//cocos2d::Vec2 origin = Director::getInstance()->getVisibleOrigin();
-		//建造建筑
-		/*cocos2d::String* filename1 = String::createWithFormat("menu/redalert0.%d.png", lable);
-		Sprite* building_1 = Sprite::create(filename1->getCString());
-		building_1->setPosition(pos);
-		HelloWorld::_tileMap->addChild(building_1, lable+10);
-		//HelloWorld::vec_building.pushBack(building_1);*/
-		
-
 		//删去“就绪”图片 
 		if (mycountry == country)
 		{
@@ -78,15 +68,6 @@ void build_menu::build(cocos2d::Vec2 pos,int country)
 			menu_ready->removeFromParent();	
 		}
         ifready[country] = -1;
-		//如果是兵营，则需记录位置
-		/*if (lable == 2)//记录兵营位置
-		{
-			HelloWorld::vec_solbuild.pushBack(building_1);
-		}
-		else if (lable == 3)
-		{
-			HelloWorld::vec_carbuild.pushBack(building_1);
-		}*/
 	}
 }
 void build_menu::cretimer(int my_country,int country)//创建菜单CD条,造兵
@@ -290,7 +271,7 @@ void sol_menu::buildsol(int country)
 			a_people->setPhysicsBody(body);
 			HelloWorld::createblood(a_people, 1);
 			auto layer = this->getParent();
-			layer->addChild(a_people, 0);
+			HelloWorld::_tileMap->addChild(a_people, 0);
 		}
 		else if (lable == 1 && HelloWorld::major_camp[country] != NULL)//犬
 		{
@@ -313,7 +294,7 @@ void sol_menu::buildsol(int country)
 			a_dog->setPhysicsBody(body);
 			HelloWorld::createblood(a_dog, 1);
 			auto layer = this->getParent();
-			layer->addChild(a_dog, 0);
+			HelloWorld::_tileMap->addChild(a_dog, 0);
 		}
 		else if (lable == 2 && HelloWorld::major_factory[country] != NULL)//坦克
 		{
@@ -336,7 +317,7 @@ void sol_menu::buildsol(int country)
 			a_tank->setPhysicsBody(body);
 			HelloWorld::createblood(a_tank, 1);
 			auto layer = this->getParent();
-			layer->addChild(a_tank, 0);
+			HelloWorld::_tileMap->addChild(a_tank, 0);
 		}
 	}
 }

@@ -22,12 +22,18 @@ std::vector<std::tuple<std::string, bool, bool>> imformation::guest_list;//name 
 //»ùµØµÄÍßÆ¬×ø±ê
 #define X_BASE1 4
 #define Y_BASE1 45
-#define X_BASE2 20
-#define Y_BASE2 45
+#define X_BASE2 45
+#define Y_BASE2 4
+#define X_BASE3 4
+#define Y_BASE3 4
+#define X_BASE4 45
+#define Y_BASE4 45
 USING_NS_CC;
 extern client* pClient;
 int tempt;
 int HelloWorld::situation[XMAX*YMAX];
+std::vector<cocos2d::Vec2> HelloWorld::vec_mappos;
+std::vector<base*> HelloWorld::vec_base;
 std::vector<camp*> HelloWorld::major_camp;//¸÷·½µÄÖ÷Òª±øÓª
 std::vector<factory*> HelloWorld::major_factory;//¸÷·½µÄÖ÷ÒªÕ½³µ¹¤³§
 std::vector<std::vector<people*>> HelloWorld::vec_people;
@@ -41,7 +47,7 @@ std::vector<std::vector<factory*>> HelloWorld::vec_factory;
 cocos2d::TMXTiledMap* HelloWorld::_tileMap;
 cocos2d::Vector<build_menu*> HelloWorld::vec_buimenu;//´¢´æ½¨Öş²Ëµ¥µÄÈİÆ÷
 cocos2d::Vector<sol_menu*> HelloWorld::vec_solmenu;//´¢´æ±øÖÖ²Ëµ¥µÄÈİÆ÷
-int country_tempt_store;
+
 Scene* HelloWorld::createScene(client* p_to_Client,int side)
 {
 	pClient = p_to_Client;
@@ -49,12 +55,12 @@ Scene* HelloWorld::createScene(client* p_to_Client,int side)
 	if (side == 1)
 	{
 		imformation::am_i_host = 1;
-		//country_tempt_store = 1;
+		imformation::my_number = 1;
 	}
 	else
 	{
 		imformation::am_i_host = 0;
-		//country_tempt_store = 0;
+		imformation::my_number = 2;
 	}
 
 	auto scene = Scene::createWithPhysics();
@@ -126,13 +132,18 @@ bool HelloWorld::init()
 		vec_electric.push_back(vec_8);
 	for (int i = 1; i <= 5; i++)
 		set_building.push_back(0);
-	for (int i = 1; i <= 5; i++)
-		mouseDownPosition.push_back(cocos2d::Vec2(0,0));
+	for (int i = 1; i <= 5; i++) {
+		mouseDownPosition.push_back(cocos2d::Vec2(0, 0));
+		real_mouseDownPosition.push_back(cocos2d::Vec2(0, 0));
+	}
 	camp* mmp;
 	factory* mmp2;
 	for (int i = 1; i <= 5; i++) {
 		major_camp.push_back(mmp);
 		major_factory.push_back(mmp2);
+	}
+	for (int i = 1; i <= 5; i++) {
+		vec_base.push_back(NULL);
 	}
 
 
@@ -142,8 +153,21 @@ bool HelloWorld::init()
 	this->setContentSize(scene_size);
 	//¼ÓÈëÍßÆ¬µØÍ¼
 	_tileMap = TMXTiledMap::create("map/first.tmx");
-	_tileMap->setAnchorPoint(Vec2(0.5,0.5));
-	_tileMap->setPosition(Vec2(this->getContentSize().width/2,this->getContentSize().height/2));
+	if(imformation::my_number==1)
+		_tileMap->setPosition(Vec2(0, 0));
+	else if(imformation::my_number == 2)
+		_tileMap->setPosition(Vec2(-_tileMap->getContentSize().width - 211 + visibleSize.width, -_tileMap->getContentSize().height+visibleSize.height));
+	else if (imformation::my_number == 3)
+		_tileMap->setPosition(Vec2(0, -_tileMap->getContentSize().height + visibleSize.height));
+	else if (imformation::my_number == 4)
+		_tileMap->setPosition(Vec2(-_tileMap->getContentSize().width - 211 + visibleSize.width, 0));
+
+	startpos = _tileMap->getPosition();
+	vec_mappos.push_back(Vec2(0, 0));
+	vec_mappos.push_back(Vec2(0, 0));
+	vec_mappos.push_back(Vec2(-_tileMap->getContentSize().width - 211 + visibleSize.width, -_tileMap->getContentSize().height + visibleSize.height));
+	vec_mappos.push_back(Vec2(0, -_tileMap->getContentSize().height + visibleSize.height));
+	vec_mappos.push_back(Vec2(-_tileMap->getContentSize().width - 211 + visibleSize.width, 0));
 	this->addChild(_tileMap, 0, 100);
 	//¼ÓÈëÅö×²²ã
 	_colliable = _tileMap->layerNamed("collidable");
@@ -167,23 +191,51 @@ bool HelloWorld::init()
 	this->setPhysicsBody(abody);
 
 	//´´½¨Ã¿Ò»·½»ùµØ
-	base1 = base::create("base1.png");
-	base2 = base::create("base2.png");
-	base3 = base::create("base3.png");
-	base4 = base::create("base4.png");
+	vec_base[1] = base::create("base1.png");
+	vec_base[2] = base::create("base2.png");
+	vec_base[3] = base::create("base3.png");
+	vec_base[4] = base::create("base4.png");
+	for (int i = 1; i <= 4; i++)
+	{
+		vec_base[i]->set_data(i);
+	}
 	//ÎïÀíÒıÇæ±ß¿ò
-	cocos2d::Size building_size(base1->getContentSize().width, base1->getContentSize().height);
+	cocos2d::Size building_size(vec_base[1]->getContentSize().width, vec_base[1]->getContentSize().height);
 	cocos2d::PhysicsBody* body1 = PhysicsBody::createEdgeBox(building_size, PhysicsMaterial(10, 0, 0), 1.0f);
 	cocos2d::PhysicsBody* body2 = PhysicsBody::createEdgeBox(building_size, PhysicsMaterial(10, 0, 0), 1.0f);
-	base1->setPhysicsBody(body1);
-	base2->setPhysicsBody(body2);
+	cocos2d::PhysicsBody* body3 = PhysicsBody::createEdgeBox(building_size, PhysicsMaterial(10, 0, 0), 1.0f);
+	cocos2d::PhysicsBody* body4= PhysicsBody::createEdgeBox(building_size, PhysicsMaterial(10, 0, 0), 1.0f);
+	vec_base[1]->setPhysicsBody(body1);
+	vec_base[2]->setPhysicsBody(body2);
+	vec_base[3]->setPhysicsBody(body3);
+	vec_base[4]->setPhysicsBody(body4);
 	//ÉèÖÃÎ»ÖÃ
-	base1->setAnchorPoint(Vec2(0.5, 0.5));
-	base2->setAnchorPoint(Vec2(0.5, 0.5));
-	base1->setPosition(cocos2d::Vec2(32 * (X_BASE1 + 0.5), 32 * (50 - Y_BASE1 - 0.5)));
-	base2->setPosition(cocos2d::Vec2(32 * (X_BASE2 + 0.5), 32 * (50 - Y_BASE2 - 0.5)));
-	this->addChild(base1);
-	this->addChild(base2);
+	for (int i = 1; i <= 4; i++)
+		vec_base[i]->setAnchorPoint(Vec2(0.5, 0.5));
+	vec_base[1]->setPosition(cocos2d::Vec2(32 * (X_BASE1 + 0.5), 32 * (50 - Y_BASE1 - 0.5)));
+	vec_base[2]->setPosition(cocos2d::Vec2(32 * (X_BASE2 + 0.5), 32 * (50 - Y_BASE2 - 0.5)));
+	if(num_player>=3)
+		vec_base[3]->setPosition(cocos2d::Vec2(32 * (X_BASE3 + 0.5), 32 * (50 - Y_BASE3 - 0.5)));
+	if (num_player >= 4)
+		vec_base[4]->setPosition(cocos2d::Vec2(32 * (X_BASE4 + 0.5), 32 * (50 - Y_BASE4 - 0.5)));
+	vec_base[1]->tile_position_point[0] = X_BASE1;
+	vec_base[1]->tile_position_point[1] = Y_BASE1;
+	vec_base[2]->tile_position_point[0] = X_BASE2;
+	vec_base[2]->tile_position_point[1] = Y_BASE2;
+	vec_base[3]->tile_position_point[0] = X_BASE3;
+	vec_base[3]->tile_position_point[1] = Y_BASE3;
+	vec_base[4]->tile_position_point[0] = X_BASE4;
+	vec_base[4]->tile_position_point[1] = Y_BASE4;
+	//ÉèÖÃÑªÌõ
+	for (int i = 1; i <= 4; i++)
+		createblood(vec_base[i], 4);
+
+	_tileMap->addChild(vec_base[1]);
+	_tileMap->addChild(vec_base[2]);
+	if(num_player>=3)
+		_tileMap->addChild(vec_base[3]);
+	if (num_player >= 4)
+		_tileMap->addChild(vec_base[4]);
 	//¸ü¸Äsituation
 	for(int i=-1;i<=1;i++)
 		for(int j= -1;j<=1;j++)
@@ -191,56 +243,17 @@ bool HelloWorld::init()
 	for (int i = -1; i <= 1; i++)
 		for (int j = -1; j <= 1; j++)
 			situation[(X_BASE2+j) + XMAX*(Y_BASE2+i)] = 0;
-
-    
-
-	//´´½¨²Ëµ¥°´Å¥
-	/*MenuItemFont::setFontName("Times New Roman");
-	MenuItemFont::setFontSize(32);
-
-	MenuItemFont* item_soldier = MenuItemFont::create("people", CC_CALLBACK_1(HelloWorld::menuItemsoldierCallback, this));
-	item_soldier->setPositionX(origin.x + visibleSize.width - item_soldier->getContentSize().width / 2);
-	item_soldier->setPositionY(origin.y + visibleSize.height - item_soldier->getContentSize().height / 2);
-
-	MenuItemFont* item_dog = MenuItemFont::create("dog", CC_CALLBACK_1(HelloWorld::menuItemdogCallback, this));
-	item_dog->setPositionX(origin.x + visibleSize.width - item_dog->getContentSize().width / 2);
-	item_dog->setPositionY(origin.y + visibleSize.height - item_dog->getContentSize().height / 2*3);
-
-	MenuItemFont* item_tank = MenuItemFont::create("tank", CC_CALLBACK_1(HelloWorld::menuItemtankCallback, this));
-	item_tank->setPositionX(origin.x + visibleSize.width - item_tank->getContentSize().width / 2);
-	item_tank->setPositionY(origin.y + visibleSize.height - item_tank->getContentSize().height / 2 * 5);
-
-	MenuItemFont* item_camp=MenuItemFont::create("camp", CC_CALLBACK_1(HelloWorld::menuItemcampCallback, this));
-	item_camp->setPositionX(origin.x + visibleSize.width - item_camp->getContentSize().width / 2);
-	item_camp->setPositionY(origin.y + visibleSize.height - item_camp->getContentSize().height / 2*7);
-
-	MenuItemFont* item_electric = MenuItemFont::create("electric", CC_CALLBACK_1(HelloWorld::menuItemelectricCallback, this));
-	item_electric->setPositionX(origin.x + visibleSize.width - item_electric->getContentSize().width / 2);
-	item_electric->setPositionY(origin.y + visibleSize.height - item_electric->getContentSize().height / 2 * 9);
-
-	MenuItemFont* item_mine = MenuItemFont::create("mine", CC_CALLBACK_1(HelloWorld::menuItemmineCallback, this));
-	item_mine->setPositionX(origin.x + visibleSize.width - item_mine->getContentSize().width / 2);
-	item_mine->setPositionY(origin.y + visibleSize.height - item_mine->getContentSize().height / 2 * 11);
-
-	MenuItemFont* item_factory = MenuItemFont::create("factory", CC_CALLBACK_1(HelloWorld::menuItemfactoryCallback, this));
-	item_factory->setPositionX(origin.x + visibleSize.width - item_factory->getContentSize().width / 2);
-	item_factory->setPositionY(origin.y + visibleSize.height - item_factory->getContentSize().height / 2 * 13);
-
-	Menu* mn = Menu::create(item_soldier, item_dog, item_tank, item_camp, item_electric, item_mine, item_factory, NULL);
-	mn->setPosition(Vec2::ZERO);
-	this->addChild(mn);*/
+	if(num_player>=3)
+		for (int i = -1; i <= 1; i++)
+			for (int j = -1; j <= 1; j++)
+				situation[(X_BASE3 + j) + XMAX*(Y_BASE3 + i)] = 0;
+	if (num_player >= 4)
+		for (int i = -1; i <= 1; i++)
+			for (int j = -1; j <= 1; j++)
+				situation[(X_BASE4 + j) + XMAX*(Y_BASE4 + i)] = 0;
 
 	//³õÊ¼»¯ÅÔÀ¸
 	initmenu();
-
-
-
-
-
-
-
-
-
 
 	//´ò¿ªÑªÁ¿¼à²âµ÷¶ÈÆ÷
 	this->schedule(schedule_selector(HelloWorld::updateHealth));
@@ -352,16 +365,17 @@ void HelloWorld::update(float dt)//½ÓÊÕ·şÎñÆ÷ÏûÏ¢
 			if (pmessage[2] == 'D')//Èç¹ûÊÇ°´ÏÂÊó±ê
 			{
 				//½âÎöÊó±êµã»÷µÄ×ø±ê
-				int X = (pmessage[3] - '0') * 1000 + (pmessage[4] - '0') * 100 + (pmessage[5] - '0') * 10 + (pmessage[6] - '0');
-				int Y = (pmessage[7] - '0') * 1000 + (pmessage[8] - '0') * 100 + (pmessage[9] - '0') * 10 + (pmessage[10] - '0');
+				int X = (pmessage[3] - '0') * 1000 + (pmessage[4] - '0') * 100 + (pmessage[5] - '0') * 10 + (pmessage[6] - '0') - vec_mappos[country].x;
+				int Y = (pmessage[7] - '0') * 1000 + (pmessage[8] - '0') * 100 + (pmessage[9] - '0') * 10 + (pmessage[10] - '0') - vec_mappos[country].y;
 				mouseDownPosition[country].set(X, Y);
+				real_mouseDownPosition[country].set(X + vec_mappos[country].x, Y + vec_mappos[country].y);
 
 			}
 			else if (pmessage[2] == 'U')//Èç¹ûÊÇÌ§ÆğÊó±ê
 			{
 				//½âÎöÊó±êµã»÷µÄ×ø±ê
-				int X = (pmessage[4] - '0') * 1000 + (pmessage[5] - '0') * 100 + (pmessage[6] - '0') * 10 + (pmessage[7] - '0');
-				int Y = (pmessage[8] - '0') * 1000 + (pmessage[9] - '0') * 100 + (pmessage[10] - '0') * 10 + (pmessage[11] - '0');
+				int X = (pmessage[4] - '0') * 1000 + (pmessage[5] - '0') * 100 + (pmessage[6] - '0') * 10 + (pmessage[7] - '0') - vec_mappos[country].x;
+				int Y = (pmessage[8] - '0') * 1000 + (pmessage[9] - '0') * 100 + (pmessage[10] - '0') * 10 + (pmessage[11] - '0') - vec_mappos[country].y;
 				cocos2d::Vec2 mousePosition(X, Y);
 				//½âÎöÎªÍßÆ¬×ø±ê
 				auto tile_position = tileCoordFromPosition(Vec2(X, Y));
@@ -370,14 +384,14 @@ void HelloWorld::update(float dt)//½ÓÊÕ·şÎñÆ÷ÏûÏ¢
 				{
 					if (pmessage[3] == 'L')//Èç¹ûµã»÷ÁË×ó¼ü
 					{
-						bui_lable = iftobuild(mouseDownPosition[country],country);
+						bui_lable = iftobuild(real_mouseDownPosition[country],country);
 						if (iftogo == 1 && bui_lable >= 0)
 						{
 							vec_buimenu.at(bui_lable)->cretimer(my_country, country);
 						}
 						else
 						{
-							sol_lable = ifbuildsol(mouseDownPosition[country], country);
+							sol_lable = ifbuildsol(real_mouseDownPosition[country], country);
 							if (iftogo == 1 && sol_lable >= 0)
 							{
 								if (vec_solmenu.at(sol_lable)->num_tobuild[ country ]== 1)
@@ -389,7 +403,7 @@ void HelloWorld::update(float dt)//½ÓÊÕ·şÎñÆ÷ÏûÏ¢
 								//ÅĞ¶ÏÊÇ·ñµãÉÏÁËĞ¡±ø
 								for (int i = 0; vec_people[country].size() != 0 && i <= vec_people[country].size() - 1; i++)
 								{
-									Rect rect = vec_people[country][i]->getBoundingBox();
+									cocos2d::Rect rect = vec_people[country][i]->getBoundingBox();
 									if (rect.containsPoint(mouseDownPosition[country]))//Èç¹ûµãÉÏÁË
 									{
 										if (my_country == country)//Èç¹û¸ÃÊó±ê²Ù×÷ÊÇ±¾ÈËµÄ£¬Ôò»»Í¼±ê
@@ -412,7 +426,7 @@ void HelloWorld::update(float dt)//½ÓÊÕ·şÎñÆ÷ÏûÏ¢
 								if (is_click_on_a_friend == 0)
 									for (int i = 0; vec_dog[country].size() != 0 && i <= vec_dog[country].size() - 1; i++)//ÅĞ¶ÏÊÇ·ñµãÉÏÁË¹·
 									{
-										Rect rect = vec_dog[country][i]->getBoundingBox();
+										cocos2d::Rect rect = vec_dog[country][i]->getBoundingBox();
 										if (rect.containsPoint(mouseDownPosition[country]))//Èç¹ûµãÉÏÁË
 										{
 											if (my_country == country)//Èç¹û¸ÃÊó±ê²Ù×÷ÊÇ±¾ÈËµÄ£¬Ôò»»Í¼±ê
@@ -435,7 +449,7 @@ void HelloWorld::update(float dt)//½ÓÊÕ·şÎñÆ÷ÏûÏ¢
 								if (is_click_on_a_friend == 0)
 									for (int i = 0; vec_tank[country].size() != 0 && i <= vec_tank[country].size() - 1; i++)//ÅĞ¶ÏÊÇ·ñµãÉÏÁËÌ¹¿Ë
 									{
-										Rect rect = vec_tank[country][i]->getBoundingBox();
+										cocos2d::Rect rect = vec_tank[country][i]->getBoundingBox();
 										if (rect.containsPoint(mouseDownPosition[country]))//Èç¹ûµãÉÏÁË
 										{
 											if (my_country == country)//Èç¹û¸ÃÊó±ê²Ù×÷ÊÇ±¾ÈËµÄ£¬Ôò»»Í¼±ê
@@ -458,7 +472,7 @@ void HelloWorld::update(float dt)//½ÓÊÕ·şÎñÆ÷ÏûÏ¢
 								if (is_click_on_a_friend == 0)
 									for (int i = 0; vec_camp[country].size() != 0 && i <= vec_camp[country].size() - 1; i++)//ÅĞ¶ÏÊÇ·ñµãÉÏÁË±øÓª
 									{
-										Rect rect = vec_camp[country][i]->getBoundingBox();
+										cocos2d::Rect rect = vec_camp[country][i]->getBoundingBox();
 										if (rect.containsPoint(mouseDownPosition[country]))//Èç¹ûµãÉÏÁË
 										{
 											if (my_country == country)//Èç¹û¸ÃÊó±ê²Ù×÷ÊÇ±¾ÈËµÄ£¬Ôò¸Ä±äÖ÷Òª½¨ÖşÍ¼±ê
@@ -475,7 +489,7 @@ void HelloWorld::update(float dt)//½ÓÊÕ·şÎñÆ÷ÏûÏ¢
 								if (is_click_on_a_friend == 0)
 									for (int i = 0; vec_factory[country].size() != 0 && i <= vec_factory[country].size() - 1; i++)//ÅĞ¶ÏÊÇ·ñµãÉÏÁËÕ½³µ¹¤³§
 									{
-										Rect rect = vec_factory[country][i]->getBoundingBox();
+										cocos2d::Rect rect = vec_factory[country][i]->getBoundingBox();
 										if (rect.containsPoint(mouseDownPosition[country]))//Èç¹ûµãÉÏÁË
 										{
 											if (my_country == country)//Èç¹û¸ÃÊó±ê²Ù×÷ÊÇ±¾ÈËµÄ£¬Ôò¸Ä±äÖ÷Òª½¨ÖşÍ¼±ê
@@ -502,7 +516,7 @@ void HelloWorld::update(float dt)//½ÓÊÕ·şÎñÆ÷ÏûÏ¢
 							{
 								for (int i = 0; vec_people[j].size() != 0 && i <= vec_people[j].size() - 1; i++)
 									if (j != country) {
-										cocos2d::Rect rect = vec_people[j][i]->getBoundingBox();
+										auto rect = vec_people[j][i]->getBoundingBox();
 										if (rect.containsPoint(mouseDownPosition[country])) {
 											penemy = vec_people[j][i];
 											type_of_enemy = 0;
@@ -516,7 +530,7 @@ void HelloWorld::update(float dt)//½ÓÊÕ·şÎñÆ÷ÏûÏ¢
 								for (int j = 1; j <= 4; j++) {
 									for (int i = 0; vec_dog[j].size() != 0 && i <= vec_dog[j].size() - 1; i++)
 										if (j != country) {
-											cocos2d::Rect rect = vec_dog[j][i]->getBoundingBox();
+											auto rect = vec_dog[j][i]->getBoundingBox();
 											if (rect.containsPoint(mouseDownPosition[country])) {
 												penemy = vec_dog[j][i];
 												type_of_enemy = 0;
@@ -530,7 +544,7 @@ void HelloWorld::update(float dt)//½ÓÊÕ·şÎñÆ÷ÏûÏ¢
 								for (int j = 1; j <= 4; j++) {
 									for (int i = 0; vec_tank[j].size() != 0 && i <= vec_tank[j].size() - 1; i++)
 										if (j != country) {
-											cocos2d::Rect rect = vec_tank[j][i]->getBoundingBox();
+											auto rect = vec_tank[j][i]->getBoundingBox();
 											if (rect.containsPoint(mouseDownPosition[country])) {
 												penemy = vec_tank[j][i];
 												type_of_enemy = 0;
@@ -544,7 +558,7 @@ void HelloWorld::update(float dt)//½ÓÊÕ·şÎñÆ÷ÏûÏ¢
 								for (int j = 1; j <= 4; j++) {
 									for (int i = 0; vec_camp[j].size() != 0 && i <= vec_camp[j].size() - 1; i++) {
 										if (j != country) {
-											cocos2d::Rect rect = vec_camp[j][i]->getBoundingBox();
+											auto rect = vec_camp[j][i]->getBoundingBox();
 											if (rect.containsPoint(mouseDownPosition[country])) {
 												penemy = vec_camp[j][i];
 												type_of_enemy = 1;
@@ -559,7 +573,7 @@ void HelloWorld::update(float dt)//½ÓÊÕ·şÎñÆ÷ÏûÏ¢
 								for (int j = 1; j <= 4; j++) {
 									for (int i = 0; vec_electric[j].size() != 0 && i <= vec_electric[j].size() - 1; i++) {
 										if (j != country) {
-											cocos2d::Rect rect = vec_electric[j][i]->getBoundingBox();
+											auto rect = vec_electric[j][i]->getBoundingBox();
 											if (rect.containsPoint(mouseDownPosition[country])) {
 												penemy = vec_electric[j][i];
 												type_of_enemy = 2;
@@ -574,7 +588,7 @@ void HelloWorld::update(float dt)//½ÓÊÕ·şÎñÆ÷ÏûÏ¢
 								for (int j = 1; j <= 4; j++) {
 									for (int i = 0; vec_mine[j].size() != 0 && i <= vec_mine[j].size() - 1; i++) {
 										if (j != country) {
-											cocos2d::Rect rect = vec_mine[j][i]->getBoundingBox();
+											auto rect = vec_mine[j][i]->getBoundingBox();
 											if (rect.containsPoint(mouseDownPosition[country])) {
 												penemy = vec_mine[j][i];
 												type_of_enemy = 3;
@@ -589,10 +603,27 @@ void HelloWorld::update(float dt)//½ÓÊÕ·şÎñÆ÷ÏûÏ¢
 								for (int j = 1; j <= 4; j++) {
 									for (int i = 0; vec_factory[j].size() != 0 && i <= vec_factory[j].size() - 1; i++) {
 										if (j != country) {
-											cocos2d::Rect rect = vec_factory[j][i]->getBoundingBox();
+											auto rect = vec_factory[j][i]->getBoundingBox();
 											if (rect.containsPoint(mouseDownPosition[country])) {
 												penemy = vec_factory[j][i];
 												type_of_enemy = 4;
+												break;
+											}
+										}
+									}
+									if (penemy)
+										break;
+								}
+							if (penemy == NULL)//ÅĞ¶ÏÓÒ¼üÊÇ·ñµãÔÚÁËÆäËû·½»ùµØÉÏ
+								for (int j = 1; j <= 4; j++) {
+									if (j != country) {
+										if (vec_base[j])
+										{
+											auto rect = vec_base[j]->getBoundingBox();
+											if (rect.containsPoint(mouseDownPosition[country])) 
+											{
+												penemy = vec_base[j];
+												type_of_enemy = 5;
 												break;
 											}
 										}
@@ -629,7 +660,7 @@ void HelloWorld::update(float dt)//½ÓÊÕ·şÎñÆ÷ÏûÏ¢
 				{
 					if (pmessage[3] == 'L')//Èç¹ûµã»÷ÁË×ó¼ü
 					{
-						bui_lable = ifbuild(mouseDownPosition[country], country);
+						bui_lable = ifbuild(real_mouseDownPosition[country], country);
 						if (iftogo == 1 && bui_lable >= 0)//½¨Öş×´Ì¬
 						{
 							if (vec_buimenu.at(bui_lable)->ifready[country] == 1)
@@ -687,6 +718,29 @@ void HelloWorld::update(float dt)//½ÓÊÕ·şÎñÆ÷ÏûÏ¢
 									vec_tank[country][i]->setTexture(vec_tank[country][i]->texture_normal);
 							}
 						}
+					}
+					else if(pmessage[3] == 'R')//Èç¹ûµã»÷ÁËÓÒ¼ü
+					{
+						vec_mappos[country] = vec_mappos[country] - mouseDownPosition[country] + mousePosition;          //¸ù¾İÊó±êÆ«ÒÆÁ¿¸Ä±äµØÍ¼Î»ÖÃ
+
+						float mapWidth = _tileMap->getMapSize().width*_tileMap->getTileSize().width;
+						float mapHeight = _tileMap->getMapSize().width*_tileMap->getTileSize().height;
+						Vec2 winSize = CCDirector::sharedDirector()->getWinSize();//ÆÁÄ»´óĞ¡
+						cocos2d::Vec2 posmax = Vec2(0, 0);
+						cocos2d::Vec2 posmin = Vec2(-mapWidth - 211 + winSize.x, -mapHeight + winSize.y);
+						
+						//ÅĞ¶ÏÊÇ·ñÍÏ³öµØÍ¼±ß½ç
+						if (vec_mappos[country].x < posmin.x)
+							vec_mappos[country].x = posmin.x;
+						if (vec_mappos[country].x > posmax.x)
+							vec_mappos[country].x = posmax.x;
+						if (vec_mappos[country].y < posmin.y)
+							vec_mappos[country].y = posmin.y;
+						if (vec_mappos[country].y > posmax.y)
+							vec_mappos[country].y = posmax.y;
+
+						if(my_country==country)
+							_tileMap->setPosition(vec_mappos[country]);
 					}
 				}
 			}
@@ -809,6 +863,15 @@ void HelloWorld::update(float dt)//½ÓÊÕ·şÎñÆ÷ÏûÏ¢
 				answer += "M" + std::to_string(i) + tempt + vec_mine[i][j]->report_my_position() + " ";
 			}
 		}
+		for (int i = 1; i < vec_base.size(); i++)
+		{
+			std::string tempt;
+			tempt = std::to_string(i);
+			if (vec_base[i])
+			{
+				answer += "B" + tempt + vec_base[i]->report_my_position() + " ";
+			}
+		}
 		pClient->sendMessage(answer);
 	}
 	if (message_.find("check ") == 0 && (!imformation::am_i_host))
@@ -821,6 +884,17 @@ void HelloWorld::update(float dt)//½ÓÊÕ·şÎñÆ÷ÏûÏ¢
 			int which = atoi(which_one.c_str());
 			switch (tempt[0])
 			{
+			case('B'):
+			{
+				int base_num = atoi(tempt.substr(1, 1).c_str());
+				if (base_num < vec_base.size())
+				{
+					std::string blood_value = tempt.substr(2);
+					int blood = atoi(blood_value.c_str());
+					vec_base[base_num]->health = blood;
+				}
+
+			}break;
 			case('P') :
 			{
 				if (which < vec_people[tempt[1] - '0'].size())
@@ -1220,7 +1294,45 @@ void HelloWorld::update(float dt)//½ÓÊÕ·şÎñÆ÷ÏûÏ¢
 					vec_factory[j].erase(iter);
 				}
 			}break;
+			case('B'):
+			{
+				std::string which_base_to_die = tempt.substr(1);
+				int which_base = atoi(which_base_to_die.c_str());
+				if (which_base < vec_base.size())
+				{
+					auto iter = vec_base.begin();
+					for (int i = 0; i < which_base; i++)
+					{
+						iter++;
+					}
+					if (*iter)
+					{
+						auto bar0 = (*iter)->getChildByTag(0);
+						auto progress = (*iter)->getChildByTag(1);
+						bar0->removeFromParent();
+						progress->removeFromParent();
+						//²éÕÒÕıÔÚ¹¥»÷¸Ãµ¥Î»µÄÆäËû¹ú¼Òµ¥Î»
+						for (int j2 = 1; j2 <= 4; j2++)
+						{
+							for (int i2 = 0; vec_people[j2].size() > 0 && i2 <= vec_people[j2].size() - 1; i2++)
+								if (*iter == vec_people[j2][i2]->enemy_target)
+									vec_people[j2][i2]->enemy_target = NULL;
+							for (int i2 = 0; vec_dog[j2].size() > 0 && i2 <= vec_dog[j2].size() - 1; i2++)
+								if (*iter == vec_dog[j2][i2]->enemy_target)
+									vec_dog[j2][i2]->enemy_target = NULL;
+							for (int i2 = 0; vec_tank[j2].size() > 0 && i2 <= vec_tank[j2].size() - 1; i2++)
+								if (*iter == vec_tank[j2][i2]->enemy_target)
+									vec_tank[j2][i2]->enemy_target = NULL;
+						}
+						//ÇĞ»»Ö÷Òª½¨Öş
 
+						(*iter)->change_situation(situation, 1);
+						(*iter)->removeFromParent();
+						*iter = NULL;
+						
+					}
+				}
+			}; break;
 			default:break;
 			}
 		}
@@ -1448,26 +1560,6 @@ void HelloWorld::updateHealth(float dt)//ÑªÁ¿¼à²â
 			{
 				if (imformation::am_i_host)
 					death_imfor += "P" + std::to_string(j) + std::to_string(iter - vec_people[j].begin()) + " ";
-				/*auto bar0 = (*iter)->getChildByTag(0);
-				bar0->removeFromParent();
-				progress->removeFromParent();
-				//²éÕÒÕıÔÚ¹¥»÷¸Ãµ¥Î»µÄÆäËû¹ú¼Òµ¥Î»
-				for (int j2 = 1; j2 <= 4; j2++)
-				if (j2 != j)
-				{
-				for (int i2 = 0; vec_people[j2].size() > 0 && i2 <= vec_people[j2].size() - 1; i2++)
-				if (*iter == vec_people[j2][i2]->enemy_target)
-				vec_people[j2][i2]->enemy_target = NULL;
-				for (int i2 = 0; vec_dog[j2].size() > 0 && i2 <= vec_dog[j2].size() - 1; i2++)
-				if (*iter == vec_dog[j2][i2]->enemy_target)
-				vec_dog[j2][i2]->enemy_target = NULL;
-				for (int i2 = 0; vec_tank[j2].size() > 0 && i2 <= vec_tank[j2].size() - 1; i2++)
-				if (*iter == vec_tank[j2][i2]->enemy_target)
-				vec_tank[j2][i2]->enemy_target = NULL;
-				}
-				(*iter)->removeFromParent();
-				iter = vec_people[j].erase(iter);
-				continue;*/
 			}
 			iter++;
 		}
@@ -1481,26 +1573,6 @@ void HelloWorld::updateHealth(float dt)//ÑªÁ¿¼à²â
 			{
 				if (imformation::am_i_host)
 					death_imfor += "D" + std::to_string(j) + std::to_string(iter - vec_dog[j].begin()) + " ";
-				/*	auto bar0 = (*iter)->getChildByTag(0);
-				bar0->removeFromParent();
-				progress->removeFromParent();
-				//²éÕÒÕıÔÚ¹¥»÷¸Ãµ¥Î»µÄÆäËû¹ú¼Òµ¥Î»
-				for (int j2 = 1; j2 <= 4; j2++)
-				if (j2 != j)
-				{
-				for (int i2 = 0; vec_people[j2].size() > 0 && i2 <= vec_people[j2].size() - 1; i2++)
-				if (*iter == vec_people[j2][i2]->enemy_target)
-				vec_people[j2][i2]->enemy_target = NULL;
-				for (int i2 = 0; vec_dog[j2].size() > 0 && i2 <= vec_dog[j2].size() - 1; i2++)
-				if (*iter == vec_dog[j2][i2]->enemy_target)
-				vec_dog[j2][i2]->enemy_target = NULL;
-				for (int i2 = 0; vec_tank[j2].size() > 0 && i2 <= vec_tank[j2].size() - 1; i2++)
-				if (*iter == vec_tank[j2][i2]->enemy_target)
-				vec_tank[j2][i2]->enemy_target = NULL;
-				}
-				(*iter)->removeFromParent();
-				iter = vec_dog[j].erase(iter);
-				continue;  */
 			}
 			iter++;
 		}
@@ -1514,26 +1586,6 @@ void HelloWorld::updateHealth(float dt)//ÑªÁ¿¼à²â
 			{
 				if (imformation::am_i_host)
 					death_imfor += "T" + std::to_string(j) + std::to_string(iter - vec_tank[j].begin()) + " ";
-				/*auto bar0 = (*iter)->getChildByTag(0);
-				bar0->removeFromParent();
-				progress->removeFromParent();
-				//²éÕÒÕıÔÚ¹¥»÷¸Ãµ¥Î»µÄÆäËû¹ú¼Òµ¥Î»
-				for (int j2 = 1; j2 <= 4; j2++)
-				if (j2 != j)
-				{
-				for (int i2 = 0; vec_people[j2].size() > 0 && i2 <= vec_people[j2].size() - 1; i2++)
-				if (*iter == vec_people[j2][i2]->enemy_target)
-				vec_people[j2][i2]->enemy_target = NULL;
-				for (int i2 = 0; vec_dog[j2].size() > 0 && i2 <= vec_dog[j2].size() - 1; i2++)
-				if (*iter == vec_dog[j2][i2]->enemy_target)
-				vec_dog[j2][i2]->enemy_target = NULL;
-				for (int i2 = 0; vec_tank[j2].size() > 0 && i2 <= vec_tank[j2].size() - 1; i2++)
-				if (*iter == vec_tank[j2][i2]->enemy_target)
-				vec_tank[j2][i2]->enemy_target = NULL;
-				}
-				(*iter)->removeFromParent();
-				iter = vec_tank[j].erase(iter);
-				continue;*/
 			}
 			iter++;
 		}
@@ -1547,45 +1599,6 @@ void HelloWorld::updateHealth(float dt)//ÑªÁ¿¼à²â
 			{
 				if (imformation::am_i_host)
 					death_imfor += "C" + std::to_string(j) + std::to_string(iter - vec_camp[j].begin()) + " ";
-				/*auto bar0 = (*iter)->getChildByTag(0);
-				bar0->removeFromParent();
-				progress->removeFromParent();
-				//²éÕÒÕıÔÚ¹¥»÷¸Ãµ¥Î»µÄÆäËû¹ú¼Òµ¥Î»
-				for (int j2 = 1; j2 <= 4; j2++)
-				if (j2 != j)
-				{
-				for (int i2 = 0; vec_people[j2].size() > 0 && i2 <= vec_people[j2].size() - 1; i2++)
-				if (*iter == vec_people[j2][i2]->enemy_target)
-				vec_people[j2][i2]->enemy_target = NULL;
-				for (int i2 = 0; vec_dog[j2].size() > 0 && i2 <= vec_dog[j2].size() - 1; i2++)
-				if (*iter == vec_dog[j2][i2]->enemy_target)
-				vec_dog[j2][i2]->enemy_target = NULL;
-				for (int i2 = 0; vec_tank[j2].size() > 0 && i2 <= vec_tank[j2].size() - 1; i2++)
-				if (*iter == vec_tank[j2][i2]->enemy_target)
-				vec_tank[j2][i2]->enemy_target = NULL;
-				}
-				//ÇĞ»»Ö÷Òª½¨Öş
-				if ((*iter) == major_camp[j]) //Èç¹ûËüÊÇÖ÷Òª½¨Öş
-				{
-				if (vec_camp[j].size() <= 1)//Èç¹ûÖ»Ê£ÕâÒ»¸ö½¨ÖşÁË
-				major_camp[j] == NULL;
-				else //Èç¹û³ıÕâ¸ö½¨ÖşÖ®Íâ»¹ÓĞÆäËû½¨Öş
-				{
-				//ÕÒµ½µÚÒ»¸öÆäËû½¨Öş£¬½«ÆäÉèÎªÖ÷Òª½¨Öş
-				for (int k = 0; k < vec_camp[j].size(); k++)
-				if (vec_camp[j][k] != (*iter)) {
-				major_camp[j] = vec_camp[j][k];
-				if(my_country==j)
-				vec_camp[j][k]->setTexture(vec_camp[j][k]->texture_major);
-				}
-				}
-
-				}
-
-				(*iter)->change_situation(situation, 1);
-				(*iter)->removeFromParent();
-				iter = vec_camp[j].erase(iter);
-				continue;*/
 			}
 			iter++;
 		}
@@ -1599,27 +1612,6 @@ void HelloWorld::updateHealth(float dt)//ÑªÁ¿¼à²â
 			{
 				if (imformation::am_i_host)
 					death_imfor += "M" + std::to_string(j) + std::to_string(iter - vec_mine[j].begin()) + " ";
-				/*	auto bar0 = (*iter)->getChildByTag(0);
-				bar0->removeFromParent();
-				progress->removeFromParent();
-				//²éÕÒÕıÔÚ¹¥»÷¸Ãµ¥Î»µÄÆäËû¹ú¼Òµ¥Î»
-				for (int j2 = 1; j2 <= 4; j2++)
-				if (j2 != j)
-				{
-				for (int i2 = 0; vec_people[j2].size() > 0 && i2 <= vec_people[j2].size() - 1; i2++)
-				if (*iter == vec_people[j2][i2]->enemy_target)
-				vec_people[j2][i2]->enemy_target = NULL;
-				for (int i2 = 0; vec_dog[j2].size() > 0 && i2 <= vec_dog[j2].size() - 1; i2++)
-				if (*iter == vec_dog[j2][i2]->enemy_target)
-				vec_dog[j2][i2]->enemy_target = NULL;
-				for (int i2 = 0; vec_tank[j2].size() > 0 && i2 <= vec_tank[j2].size() - 1; i2++)
-				if (*iter == vec_tank[j2][i2]->enemy_target)
-				vec_tank[j2][i2]->enemy_target = NULL;
-				}
-				(*iter)->change_situation(situation, 1);
-				(*iter)->removeFromParent();
-				iter = vec_mine[j].erase(iter);
-				continue;  */
 			}
 			iter++;
 		}
@@ -1633,27 +1625,6 @@ void HelloWorld::updateHealth(float dt)//ÑªÁ¿¼à²â
 			{
 				if (imformation::am_i_host)
 					death_imfor += "E" + std::to_string(j) + std::to_string(iter - vec_electric[j].begin()) + " ";
-				/*auto bar0 = (*iter)->getChildByTag(0);
-				bar0->removeFromParent();
-				progress->removeFromParent();
-				//²éÕÒÕıÔÚ¹¥»÷¸Ãµ¥Î»µÄÆäËû¹ú¼Òµ¥Î»
-				for (int j2 = 1; j2 <= 4; j2++)
-				if (j2 != j)
-				{
-				for (int i2 = 0; vec_people[j2].size() > 0 && i2 <= vec_people[j2].size() - 1; i2++)
-				if (*iter == vec_people[j2][i2]->enemy_target)
-				vec_people[j2][i2]->enemy_target = NULL;
-				for (int i2 = 0; vec_dog[j2].size() > 0 && i2 <= vec_dog[j2].size() - 1; i2++)
-				if (*iter == vec_dog[j2][i2]->enemy_target)
-				vec_dog[j2][i2]->enemy_target = NULL;
-				for (int i2 = 0; vec_tank[j2].size() > 0 && i2 <= vec_tank[j2].size() - 1; i2++)
-				if (*iter == vec_tank[j2][i2]->enemy_target)
-				vec_tank[j2][i2]->enemy_target = NULL;
-				}
-				(*iter)->change_situation(situation, 1);
-				(*iter)->removeFromParent();
-				iter = vec_electric[j].erase(iter);
-				continue;*/
 			}
 			iter++;
 		}
@@ -1667,46 +1638,24 @@ void HelloWorld::updateHealth(float dt)//ÑªÁ¿¼à²â
 			{
 				if (imformation::am_i_host)
 					death_imfor += "F" + std::to_string(j) + std::to_string(iter - vec_factory[j].begin()) + " ";
-				/*	auto bar0 = (*iter)->getChildByTag(0);
-				bar0->removeFromParent();
-				progress->removeFromParent();
-				//²éÕÒÕıÔÚ¹¥»÷¸Ãµ¥Î»µÄÆäËû¹ú¼Òµ¥Î»
-				for (int j2 = 1; j2 <= 4; j2++)
-				if (j2 != j)
-				{
-				for (int i2 = 0; vec_people[j2].size() > 0 && i2 <= vec_people[j2].size() - 1; i2++)
-				if (*iter == vec_people[j2][i2]->enemy_target)
-				vec_people[j2][i2]->enemy_target = NULL;
-				for (int i2 = 0; vec_dog[j2].size() > 0 && i2 <= vec_dog[j2].size() - 1; i2++)
-				if (*iter == vec_dog[j2][i2]->enemy_target)
-				vec_dog[j2][i2]->enemy_target = NULL;
-				for (int i2 = 0; vec_tank[j2].size() > 0 && i2 <= vec_tank[j2].size() - 1; i2++)
-				if (*iter == vec_tank[j2][i2]->enemy_target)
-				vec_tank[j2][i2]->enemy_target = NULL;
-				}
-				//ÇĞ»»Ö÷Òª½¨Öş
-				if ((*iter) == major_factory[j]) //Èç¹ûËüÊÇÖ÷Òª½¨Öş
-				{
-				if (vec_factory[j].size() <= 1)//Èç¹ûÖ»Ê£ÕâÒ»¸ö½¨ÖşÁË
-				major_factory[j] == NULL;
-				else //Èç¹û³ıÕâ¸ö½¨ÖşÖ®Íâ»¹ÓĞÆäËû½¨Öş
-				{
-				//ÕÒµ½µÚÒ»¸öÆäËû½¨Öş£¬½«ÆäÉèÎªÖ÷Òª½¨Öş
-				for (int k = 0; k < vec_factory[j].size(); k++)
-				if (vec_factory[j][k] != (*iter)) {
-				major_factory[j] = vec_factory[j][k];
-				if (my_country == j)
-				vec_factory[j][k]->setTexture(vec_factory[j][k]->texture_major);
-				}
-				}
-
-				}
-				(*iter)->change_situation(situation, 1);
-				(*iter)->removeFromParent();
-				iter = vec_factory[j].erase(iter);
-				continue;*/
 			}
 			iter++;
+		}
+	//É¾³ıÃ»ÑªµÄbase
+		for (auto iter = vec_base.begin(); iter != vec_base.end(); iter++) 
+		{
+			if (*iter)
+			{
+				if (iter == vec_base.begin())
+					continue;
+				auto progress = (ProgressTimer *)(*iter)->getChildByTag(1);
+				progress->setPercentage((((float)(*iter)->health) / (*iter)->beginhealth) * 100);  //ÕâÀïÊÇ°Ù·ÖÖÆÏÔÊ¾
+				if ((*iter)->health <= 0)//Èç¹û¸Ãµ¥Î»Ã»ÑªÁË
+				{
+					if (imformation::am_i_host)
+						death_imfor += "B" + std::to_string(0) + std::to_string(iter - vec_base.begin()) + " ";
+				}
+			}
 		}
 	cnt_health_waiting++;
 	if (death_imfor != "death "&&imformation::am_i_host&&cnt_health_waiting>3)
@@ -1731,6 +1680,10 @@ void HelloWorld::createblood(unit* s, int x)//´´½¨ÑªÌõ
 		bar = Sprite::create("bar3.png");
 		bar->setPosition(Vec2(48, 70));
 	}
+	else if (x == 4) {
+		bar = Sprite::create("bar3.png");
+		bar->setPosition(Vec2(48, 102));
+	}
 	bar->setTag(0);
 	s->addChild(bar);
 	cocos2d::Sprite* blood;
@@ -1739,16 +1692,18 @@ void HelloWorld::createblood(unit* s, int x)//´´½¨ÑªÌõ
 		blood = Sprite::create("blood1.png");
 	else if (x == 2) 
 		blood = Sprite::create("blood2.png");
-	else if (x == 3) 
+	else if (x == 3 || x == 4)
 		blood = Sprite::create("blood3.png");
 	ProgressTimer* bloodbar = ProgressTimer::create(blood);
 	bloodbar->setType(ProgressTimer::Type::BAR);        //ÀàĞÍ£ºÌõ×´
 	if(x==1)
 		bloodbar->setPosition(Vec2(10, 30));
-	if(x==2)
+	else if(x==2)
 		bloodbar->setPosition(Vec2(32, 70));
-	if (x == 3)
+	else if (x == 3)
 		bloodbar->setPosition(Vec2(48, 70));
+	else if(x==4)
+		bloodbar->setPosition(Vec2(48, 102));
 	//´ÓÓÒµ½×ó¼õÉÙÑªÁ¿
 	bloodbar->setMidpoint(Point(0, 0.5));     //Èç¹ûÊÇ´Ó×óµ½ÓÒµÄ»°£¬¸Ä³É(1,0.5)¼´¿É
 	bloodbar->setBarChangeRate(Point(1, 0));
@@ -1884,8 +1839,8 @@ int HelloWorld::iftobuild(cocos2d::Vec2 pos,int country)//ÂäÏÂÌ§ÆğÍ¬Ò»µã£¬ÊÇ·ñ×¼
 	for (int i = 0; vec_buimenu.size() != 0 && i <= vec_buimenu.size() - 1; i++)
 	{
 		//ÅĞ¶ÏÊÇ·ñµãÉÏÁË
-		float rectx1 = vec_buimenu.at(i)->getPosition().x - vec_buimenu.at(i)->getContentSize().width / 2 - mappos.x;
-		float recty1 = vec_buimenu.at(i)->getPosition().y - vec_buimenu.at(i)->getContentSize().height / 2 - mappos.y;
+		float rectx1 = vec_buimenu.at(i)->getPosition().x - vec_buimenu.at(i)->getContentSize().width / 2;
+		float recty1 = vec_buimenu.at(i)->getPosition().y - vec_buimenu.at(i)->getContentSize().height / 2;
 		Rect buirect(rectx1, recty1, vec_buimenu.at(i)->getContentSize().width, vec_buimenu.at(i)->getContentSize().height);
 		if (buirect.containsPoint(pos))//Èç¹ûµãÉÏÁË
 		{
@@ -1928,9 +1883,10 @@ int HelloWorld::ifbuild(cocos2d::Vec2 pos, int country)//Ì§ÆğÂäÏÂ²»Í¬µã£¬ÅĞ¶ÏÊÇ·
 	for (int i = 0; vec_buimenu.size() != 0 && i <= vec_buimenu.size() - 1; i++)
 	{
 		//ÅĞ¶ÏÊÇ·ñµãÉÏÁË
-		float rectx1 = vec_buimenu.at(i)->getPosition().x - vec_buimenu.at(i)->getContentSize().width / 2 - mappos.x;
-		float recty1 = vec_buimenu.at(i)->getPosition().y - vec_buimenu.at(i)->getContentSize().height / 2 - mappos.y;
+		float rectx1 = vec_buimenu.at(i)->getPosition().x - vec_buimenu.at(i)->getContentSize().width / 2;
+		float recty1 = vec_buimenu.at(i)->getPosition().y - vec_buimenu.at(i)->getContentSize().height / 2;
 		Rect buirect(rectx1, recty1, vec_buimenu.at(i)->getContentSize().width, vec_buimenu.at(i)->getContentSize().height);
+		
 		if (buirect.containsPoint(pos))//Èç¹ûµãÉÏÁË
 		{
 			if (vec_buimenu.at(i)->ifready[ country ]== 1)
@@ -1948,8 +1904,8 @@ int HelloWorld::ifbuildsol(cocos2d::Vec2 pos, int country) //ÅĞ¶ÏÊÇ·ñµãÖĞ±øÖÖ²Ëµ
 	for (int i = 0; vec_solmenu.size() != 0 && i <= vec_solmenu.size() - 1; i++)
 	{
 		//ÅĞ¶ÏÊÇ·ñµãÉÏÁË
-		float rectx1 = vec_solmenu.at(i)->getPosition().x - vec_solmenu.at(i)->getContentSize().width / 2 - mappos.x;
-		float recty1 = vec_solmenu.at(i)->getPosition().y - vec_solmenu.at(i)->getContentSize().height / 2 - mappos.y;
+		float rectx1 = vec_solmenu.at(i)->getPosition().x - vec_solmenu.at(i)->getContentSize().width / 2;
+		float recty1 = vec_solmenu.at(i)->getPosition().y - vec_solmenu.at(i)->getContentSize().height / 2;
 		Rect solrect(rectx1, recty1, vec_solmenu.at(i)->getContentSize().width, vec_solmenu.at(i)->getContentSize().height);
 		if (solrect.containsPoint(pos)&& vec_solmenu.at(i)->ifready[country]==1)//Èç¹ûµãÉÏÁË
 		{
@@ -2035,7 +1991,7 @@ bool HelloWorld::create_a_electric(int country, cocos2d::Point tile_position) {
 		a_building->setPosition(tileToGL(tile_position));
 		a_building->set_data(country, tile_position.x, tile_position.y);
 		createblood(a_building, 2);
-		this->addChild(a_building, 0);
+		_tileMap->addChild(a_building, 0);
 		vec_electric[country].push_back(a_building);
 		set_building[country] = 0;
 
@@ -2108,7 +2064,7 @@ bool HelloWorld::create_a_mine(int country, cocos2d::Point tile_position)
 		a_building->setPosition(tileToGL(tile_position));
 		a_building->set_data(country, tile_position.x, tile_position.y);
 		createblood(a_building, 3);
-		this->addChild(a_building, 0);
+		_tileMap->addChild(a_building, 0);
 		vec_mine[country].push_back(a_building);
 		set_building[country] = 0;
 
@@ -2189,7 +2145,7 @@ bool HelloWorld::create_a_camp(int country, cocos2d::Point tile_position)
 		a_building->setPosition(tileToGL(tile_position));
 		a_building->set_data(country, tile_position.x, tile_position.y);
 		createblood(a_building, 2);
-		this->addChild(a_building, 0);
+		_tileMap->addChild(a_building, 0);
 		if (vec_camp[country].empty())
 			major_camp[country] = a_building;
 		vec_camp[country].push_back(a_building);
@@ -2272,7 +2228,7 @@ bool HelloWorld::create_a_factory(int country, cocos2d::Point tile_position)
 		a_building->setPosition(tileToGL(tile_position));
 		a_building->set_data(country, tile_position.x, tile_position.y);
 		createblood(a_building, 3);
-		this->addChild(a_building, 0);
+		_tileMap->addChild(a_building, 0);
 		if (vec_factory[country].empty())
 			major_factory[country] = a_building;
 		vec_factory[country].push_back(a_building);
@@ -2389,7 +2345,7 @@ cocos2d::Vec2 move_to_GLposition(unit* penemy, int enemy_type)
 	else if (enemy_type == 1 || enemy_type == 2)
 	{
 		cocos2d::Point building_tile_position = tileCoordFromPosition(penemy->getPosition());
-		for (int i = building_tile_position.x - 1; i <= building_tile_position.x + 2; i++) {
+		for (int i = building_tile_position.x; i <= building_tile_position.x + 1; i++) {
 			int j = XMAX*(building_tile_position.y - 1);
 			if (HelloWorld::situation[i + j] == 1)
 				return tileToGL(cocos2d::Point(i, building_tile_position.y - 1));
@@ -2404,7 +2360,7 @@ cocos2d::Vec2 move_to_GLposition(unit* penemy, int enemy_type)
 			if (HelloWorld::situation[i + j] == 1)
 				return tileToGL(cocos2d::Point(i, building_tile_position.y + 1));
 		}
-		for (int i = building_tile_position.x - 1; i <= building_tile_position.x + 2; i++) {
+		for (int i = building_tile_position.x; i <= building_tile_position.x + 1; i++) {
 			int j = XMAX*(building_tile_position.y + 2);
 			if (HelloWorld::situation[i + j] == 1)
 				return tileToGL(cocos2d::Point(i, building_tile_position.y + 2));
@@ -2413,7 +2369,7 @@ cocos2d::Vec2 move_to_GLposition(unit* penemy, int enemy_type)
 	else if (enemy_type == 3 || enemy_type == 4)
 	{
 		cocos2d::Point building_tile_position = tileCoordFromPosition(penemy->getPosition());
-		for (int i = building_tile_position.x - 2; i <= building_tile_position.x + 2; i++) {
+		for (int i = building_tile_position.x - 1; i <= building_tile_position.x + 1; i++) {
 			int j = XMAX*(building_tile_position.y - 1);
 			if (HelloWorld::situation[i + j] == 1)
 				return tileToGL(cocos2d::Point(i, building_tile_position.y - 1));
@@ -2428,7 +2384,36 @@ cocos2d::Vec2 move_to_GLposition(unit* penemy, int enemy_type)
 			if (HelloWorld::situation[i + j] == 1)
 				return tileToGL(cocos2d::Point(i, building_tile_position.y + 1));
 		}
-		for (int i = building_tile_position.x - 2; i <= building_tile_position.x + 2; i++) {
+		for (int i = building_tile_position.x - 1; i <= building_tile_position.x + 1; i++) {
+			int j = XMAX*(building_tile_position.y + 2);
+			if (HelloWorld::situation[i + j] == 1)
+				return tileToGL(cocos2d::Point(i, building_tile_position.y + 2));
+		}
+	}
+	else if (enemy_type == 5)
+	{
+		cocos2d::Point building_tile_position = tileCoordFromPosition(penemy->getPosition());
+		for (int i = building_tile_position.x - 1; i <= building_tile_position.x + 1; i++) {
+			int j = XMAX*(building_tile_position.y - 2);
+			if (HelloWorld::situation[i + j] == 1)
+				return tileToGL(cocos2d::Point(i, building_tile_position.y - 2));
+		}
+		for (int i = building_tile_position.x - 2; i != building_tile_position.x + 2; i += 4) {
+			int j = XMAX*(building_tile_position.y-1);
+			if (HelloWorld::situation[i + j] == 1)
+				return tileToGL(cocos2d::Point(i, building_tile_position.y-1));
+		}
+		for (int i = building_tile_position.x - 2; i != building_tile_position.x + 2; i += 4) {
+			int j = XMAX*(building_tile_position.y);
+			if (HelloWorld::situation[i + j] == 1)
+				return tileToGL(cocos2d::Point(i, building_tile_position.y));
+		}
+		for (int i = building_tile_position.x - 2; i != building_tile_position.x + 2; i += 4) {
+			int j = XMAX*(building_tile_position.y + 1);
+			if (HelloWorld::situation[i + j] == 1)
+				return tileToGL(cocos2d::Point(i, building_tile_position.y + 1));
+		}
+		for (int i = building_tile_position.x - 1; i <= building_tile_position.x + 1; i++) {
 			int j = XMAX*(building_tile_position.y + 2);
 			if (HelloWorld::situation[i + j] == 1)
 				return tileToGL(cocos2d::Point(i, building_tile_position.y + 2));
@@ -2451,7 +2436,7 @@ void soldier::move_to(int x, int y, int type_of_ene)
 	{
 		log("NO way");//Ã»ÕÒµ½
 	}
-	if (result == micropather::MicroPather::SOLVED)
+	else
 	{
 		popStepAndAnimate();//ÕÒµ½ÁË
 	}
@@ -2460,6 +2445,15 @@ int waiting = 0;
 void soldier::popStepAndAnimate()
 {
 	cocos2d::Point currentPosition = tileCoordForPosition(this->getPosition());
+	if (enemy_target)
+	{
+		auto enemy_rect = enemy_target->getBoundingBox();
+		if (enemy_rect.intersectsCircle(this->getPosition(), this->attack_distance))
+		{
+			this->stopAllActions();
+			this->schedule(schedule_selector(soldier::updateAttack), attack_speed, kRepeatForever, 0.2f);
+		}
+	}
 	if (path.size() == 0)
 	{
 		return;
@@ -2501,9 +2495,8 @@ void soldier::popStepAndAnimate()
 	cocos2d::Sequence* moveSequence;
 	if (enemy_target)
 	{
-		double distance_enemy = sqrt(pow(enemy_target->getPosition().x - now_position.x, 2) +
-			pow(enemy_target->getPosition().y - now_position.y, 2));
-		if (distance_enemy < attack_distance)
+		auto enemy_rect = enemy_target->getBoundingBox();
+		if (enemy_rect.intersectsCircle(this->getPosition(),this->attack_distance))
 		{
 			this->stopAllActions();
 			this->schedule(schedule_selector(soldier::updateAttack), attack_speed, kRepeatForever, 0.2f);

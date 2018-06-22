@@ -19,7 +19,7 @@ void tank::set_data(int country)
 	beginhealth = 10;
 	attack_power = 1;
 	move_speed = 10;
-	attack_distance = 100;
+	attack_distance = 200;
 	attack_speed = 1.0f;
 	if (country == 1)
 	{

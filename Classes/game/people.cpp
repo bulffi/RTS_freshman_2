@@ -19,7 +19,7 @@ void people::set_data(int country)
 	beginhealth = 10;
 	attack_power = 1;
 	move_speed = 5;
-	attack_distance = 100;
+	attack_distance = 150;
 	attack_speed = 1.0f;
 	if (country == 1)
 	{

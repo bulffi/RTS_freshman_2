@@ -54,8 +54,8 @@ void soldier::updateAttack(float dt)
 {
 	if (enemy_target)//如果敌方单位还活着
 	{
-		double distance = sqrt(pow((enemy_target->getPositionX() - this->getPositionX()), 2) + pow((enemy_target->getPositionY() - this->getPositionY()), 2));
-		if (distance <= attack_distance)//如果敌军在攻击范围内
+		auto enemy_rect = enemy_target->getBoundingBox();
+		if (enemy_rect.intersectsCircle(this->getPosition(), this->attack_distance))//如果敌军在攻击范围内
 		{
 			//攻击
 			this->attack_action = JumpBy::create(0.3f, Vec2(0, 0), 10, 1);
