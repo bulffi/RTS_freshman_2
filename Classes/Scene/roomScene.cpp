@@ -3,6 +3,7 @@
 #include"ui\CocosGUI.h"
 #include"lose.h"
 #include"SimpleAudioEngine.h"
+#include"game\HelloWorldScene.h"
 USING_NS_CC;
 client* pClient;
 int which_map;
@@ -135,7 +136,16 @@ void roomScene::update(float dt)
 			in_2 >> holder_2 >> holder_2;
 			which_map = std::atoi(holder_2.c_str());
 		}
-		
+		else if (tempt.find("START!!!!!!!!!!") == 0)
+		{
+			unscheduleUpdate();
+			typedef std::chrono::duration<int, std::milli> millisceond;
+			std::this_thread::sleep_for(millisceond(90));
+
+			auto help=HelloWorld::createScene(pClient, imformation::my_number+1);
+			auto reScene = TransitionFade::create(1.0f, help);
+			Director::getInstance()->pushScene(reScene);
+		}
 		else if (tempt.find("0") == 0 || tempt.find("1") == 0 || tempt.find("2") == 0 || tempt.find("3") == 0)
 		{
 			std::string what_happen = tempt.substr(1);
@@ -194,7 +204,7 @@ void roomScene::update(float dt)
 				auto text = Label::create(message_to_display, "fonts/Marker Felt.ttf", 50);
 				text->setColor(Color3B(0, 0, 0));
 				saying->setTitleLabel(text);
-				DelayTime * delay = DelayTime::create(2.5f);
+				DelayTime * delay = DelayTime::create(1.0f);
 				auto callFunc1 = CallFunc::create([=] {
 					this->removeChild(saying);
 				});
@@ -336,6 +346,7 @@ void roomScene::update(float dt)
 
 	}
 }
+std::string current_str;
 bool roomScene::init()
 {
 	if (!Layer::init())
@@ -364,7 +375,7 @@ bool roomScene::init()
 	this->addChild(mesge);
 	_chatWindow = cocos2d::ui::TextField::create("input words here", "fonts/Marker Felt.ttf", 50);
 	_chatWindow->setMaxLengthEnabled(true);
-	_chatWindow->setMaxLength(15);
+	_chatWindow->setMaxLength(30);
 	_chatWindow->setPosition(Vec2(origin.x + visibleSize.width*0.5, origin.y + 0.5*_chatWindow->getContentSize().height));
 	_chatWindow->addEventListener(CC_CALLBACK_2(roomScene::textFieldEvent, this));
 	_chatWindow->setColor(Color3B(0, 0, 0));
@@ -386,6 +397,20 @@ bool roomScene::init()
 		mn->setPosition(0.0f, 0.0f);
 		this->addChild(mn);
 	}
+	auto key_board = EventListenerKeyboard::create();
+	key_board->onKeyPressed = [&](EventKeyboard::KeyCode code, Event* what_happen)
+	{
+		if (code == EventKeyboard::KeyCode::KEY_ENTER)
+		{
+			if (!current_str.empty())
+			{
+				pClient->sendMessage(std::to_string(imformation::my_number) + "talk" + current_str);
+				_chatWindow->setText("");
+			}
+		}
+	};
+	auto dispather = Director::getInstance()->getEventDispatcher();
+	dispather->addEventListenerWithSceneGraphPriority(key_board, this);
 	this->scheduleUpdate();
 	return true;
 }
@@ -396,19 +421,21 @@ void roomScene::playCallback(Ref *pSender)
 	{
 		CocosDenshion::SimpleAudioEngine::getInstance()->stopBackgroundMusic();
 		this->unschedule(schedule_selector(roomScene::update));
-		typedef std::chrono::duration<int, std::milli> millisecond;
-		std::this_thread::sleep_for(millisecond(90));
-		auto help = loseScene::createScene();
-		auto reScene = TransitionFade::create(1.0f, help);
-		Director::getInstance()->replaceScene(reScene);
+		pClient->sendMessage("START!!!!!!!!!!");
+		
+		//auto help = loseScene::createScene();
+		//auto reScene = TransitionFade::create(1.0f, help);
+		//Director::getInstance()->replaceScene(reScene);
 	}
 }
-std::string current_str;
+
 void roomScene::send_message(Ref *pSender)
 {
+	
 	if (!current_str.empty())
 	{
 		pClient->sendMessage(std::to_string(imformation::my_number) + "talk" + current_str);
+		_chatWindow->setText("");
 	}
 
 }

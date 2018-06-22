@@ -27,10 +27,21 @@
     <ClCompile Include="..\Classes\Scene\roomScene.cpp" />
     <ClCompile Include="..\Classes\Scene\searchScene.cpp" />
     <ClCompile Include="..\Classes\my_Network\client.cpp" />
-    <ClCompile Include="..\Classes\soldier\soldier.cpp" />
-    <ClCompile Include="..\Classes\utility\open_source_Astar\micropather.cpp" />
-    <ClCompile Include="..\Classes\Scene\HelloWorldScene.cpp" />
-    <ClCompile Include="..\Classes\buliding\building.cpp" />
+    <ClCompile Include="..\Classes\Scene\lose.cpp" />
+    <ClCompile Include="..\Classes\game\base.cpp" />
+    <ClCompile Include="..\Classes\game\building.cpp" />
+    <ClCompile Include="..\Classes\game\camp.cpp" />
+    <ClCompile Include="..\Classes\game\dog.cpp" />
+    <ClCompile Include="..\Classes\game\electric.cpp" />
+    <ClCompile Include="..\Classes\game\factory.cpp" />
+    <ClCompile Include="..\Classes\game\HelloWorldScene.cpp" />
+    <ClCompile Include="..\Classes\game\menu.cpp" />
+    <ClCompile Include="..\Classes\game\micropather.cpp" />
+    <ClCompile Include="..\Classes\game\mine.cpp" />
+    <ClCompile Include="..\Classes\game\people.cpp" />
+    <ClCompile Include="..\Classes\game\soldier.cpp" />
+    <ClCompile Include="..\Classes\game\tank.cpp" />
+    <ClCompile Include="..\Classes\game\unit.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="main.h">
@@ -52,10 +63,23 @@
     <ClInclude Include="..\Classes\my_Network\chat_message.h" />
     <ClInclude Include="..\Classes\utility\information.h" />
     <ClInclude Include="..\Classes\Scene\gameScene.h" />
-    <ClInclude Include="..\Classes\soldier\soldier.h" />
-    <ClInclude Include="..\Classes\utility\open_source_Astar\micropather.h" />
-    <ClInclude Include="..\Classes\Scene\HelloWorldScene.h" />
-    <ClInclude Include="..\Classes\buliding\building.h" />
+    <ClInclude Include="..\Classes\Scene\lose.h" />
+    <ClInclude Include="..\Classes\game\base.h" />
+    <ClInclude Include="..\Classes\game\building.h" />
+    <ClInclude Include="..\Classes\game\camp.h" />
+    <ClInclude Include="..\Classes\game\chat_message.h" />
+    <ClInclude Include="..\Classes\game\dog.h" />
+    <ClInclude Include="..\Classes\game\electric.h" />
+    <ClInclude Include="..\Classes\game\factory.h" />
+    <ClInclude Include="..\Classes\game\HelloWorldScene.h" />
+    <ClInclude Include="..\Classes\game\information.h" />
+    <ClInclude Include="..\Classes\game\menu.h" />
+    <ClInclude Include="..\Classes\game\micropather.h" />
+    <ClInclude Include="..\Classes\game\mine.h" />
+    <ClInclude Include="..\Classes\game\people.h" />
+    <ClInclude Include="..\Classes\game\soldier.h" />
+    <ClInclude Include="..\Classes\game\tank.h" />
+    <ClInclude Include="..\Classes\game\unit.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="game.rc">
