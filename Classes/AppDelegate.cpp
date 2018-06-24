@@ -19,6 +19,7 @@ using namespace cocos2d::experimental;
 using namespace CocosDenshion;
 #endif
 
+
 USING_NS_CC;
 using namespace CocosDenshion;
 static cocos2d::Size designResolutionSize = cocos2d::Size(480, 320);
@@ -26,30 +27,26 @@ static cocos2d::Size smallResolutionSize = cocos2d::Size(480, 320);
 static cocos2d::Size mediumResolutionSize = cocos2d::Size(1024, 768);
 static cocos2d::Size largeResolutionSize = cocos2d::Size(2048, 1536);
 
-AppDelegate::AppDelegate()
-{
+AppDelegate::AppDelegate() {
+
 }
 
 AppDelegate::~AppDelegate() 
 {
-#if USE_AUDIO_ENGINE
-    AudioEngine::end();
-#elif USE_SIMPLE_AUDIO_ENGINE
-    SimpleAudioEngine::end();
-#endif
 }
 
-// if you want a different context, modify the value of glContextAttrs
-// it will affect all platforms
+//if you want a different context,just modify the value of glContextAttrs
+//it will takes effect on all platforms
 void AppDelegate::initGLContextAttrs()
 {
-    // set OpenGL context attributes: red,green,blue,alpha,depth,stencil
+    //set OpenGL context attributions,now can only set six attributions:
+    //red,green,blue,alpha,depth,stencil
     GLContextAttrs glContextAttrs = {8, 8, 8, 8, 24, 8};
 
     GLView::setGLContextAttrs(glContextAttrs);
 }
 
-// if you want to use the package manager to install more packages,  
+// If you want to use packages manager to install more packages, 
 // don't modify or remove this function
 static int register_all_packages()
 {
@@ -62,9 +59,9 @@ bool AppDelegate::applicationDidFinishLaunching() {
     auto glview = director->getOpenGLView();
     if(!glview) {
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32) || (CC_TARGET_PLATFORM == CC_PLATFORM_MAC) || (CC_TARGET_PLATFORM == CC_PLATFORM_LINUX)
-        glview = GLViewImpl::createWithRect("RTS", cocos2d::Rect(0, 0, designResolutionSize.width, designResolutionSize.height));
+        glview = GLViewImpl::createWithRect("HelloWorld", cocos2d::Rect(0, 0, mediumResolutionSize.width, mediumResolutionSize.height));
 #else
-        glview = GLViewImpl::create("RTS");
+        glview = GLViewImpl::create("HelloWorld");
 #endif
         director->setOpenGLView(glview);
     }
@@ -73,7 +70,7 @@ bool AppDelegate::applicationDidFinishLaunching() {
     director->setDisplayStats(true);
 
     // set FPS. the default value is 1.0/60 if you don't call this
-    director->setAnimationInterval(1.0f / 60);
+    director->setAnimationInterval(1.0 / 60);
 
     // Set the design resolution
     glview->setDesignResolutionSize(1024, 768, ResolutionPolicy::EXACT_FIT);
@@ -106,11 +103,13 @@ bool AppDelegate::applicationDidFinishLaunching() {
     return true;
 }
 
-// This function will be called when the app is inactive. Note, when receiving a phone call it is invoked.
+// This function will be called when the app is inactive. When comes a phone call,it's be invoked too
 void AppDelegate::applicationDidEnterBackground() {
     Director::getInstance()->stopAnimation();
+
     SimpleAudioEngine::getInstance()->pauseBackgroundMusic();
     SimpleAudioEngine::getInstance()->pauseAllEffects();
+
 }
 
 // this function will be called when the app is active again
