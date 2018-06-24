@@ -2,22 +2,12 @@
 #include "HelloWorldScene.h"
 #include "cocos2d.h"
 #include <math.h>
-#include"information.h"
+#include"utility\information.h"
+#include"SimpleAudioEngine.h"
+#include"HelloWorldScene.h"
 #define num_soldier 5
 USING_NS_CC;
 
-soldier* soldier::create(const char* filename)
-{
-	
-	soldier* sprite = new soldier();
-	if (sprite && sprite->initWithFile(filename))
-	{
-		sprite->autorelease();
-		return sprite;
-	}
-	CC_SAFE_DELETE(sprite);
-	return nullptr;
-}
 
 
 //追赶敌人的调度器
@@ -50,6 +40,8 @@ void soldier::updateMove(float dt)
 }
 
 //持续攻击敌人的调度器
+int alternative_play_effect_side = 1;
+extern bool if_there_is_effect;
 void soldier::updateAttack(float dt)
 {
 	if (enemy_target)//如果敌方单位还活着
@@ -58,6 +50,19 @@ void soldier::updateAttack(float dt)
 		if (enemy_rect.intersectsCircle(this->getPosition(), this->attack_distance))//如果敌军在攻击范围内
 		{
 			//攻击
+			if (alternative_play_effect_side == 1)
+			{
+				alternative_play_effect_side = -1;
+			}
+			else
+			{
+				alternative_play_effect_side = 1;
+			}
+			auto visibleSize = Director::getInstance()->getVisibleSize();
+			cocos2d::Rect visible_rect(0, 0, visibleSize.width, visibleSize.height);
+			cocos2d::Vec2 visible_position = this->getPosition() + HelloWorld::vec_mappos[HelloWorld::my_country];
+			if(visible_rect.containsPoint(visible_position)&&if_there_is_effect)
+				play_attack_music(alternative_play_effect_side);
 			this->attack_action = JumpBy::create(0.3f, Vec2(0, 0), 10, 1);
 			this->runAction(this->attack_action);
 

@@ -1,6 +1,7 @@
 #include <math.h>
 #include "menu.h"
 #include"HelloWorldScene.h"
+#include"utility\information.h"
 USING_NS_CC;
 
 build_menu* build_menu::create(int num)//构造函数
@@ -24,18 +25,26 @@ build_menu* build_menu::create(int num)//构造函数
 			sprite->autorelease();
            
             sprite->lable = num;
-		    int posy=0, posx = 2- num % 2;
-			if (num == 0||num==1)
+		    double posy=0, posx = 0;
+			if (num == 0)
 			{
-				posy = 2;
+				posy = 2.1;
+				posx = 1.9;
+			}
+			else if (num == 1)
+			{
+				posy = 2.1;
+				posx = 0.85;
 			}
 			else if (num == 2)
 			{
-				posy = 3.5;
+				posy = 3.15;
+				posx = 1.9;
 			}
 			else if (num == 3)
 			{
-				posy = 3;
+				posy = 3.15;
+				posx = 0.85;
 			}
 			sprite->position =cocos2d::Vec2(origin.x - sprite->getContentSize().width * posx + visibleSize.width + 10, origin.y - sprite->getContentSize().height * posy + visibleSize.height - 5);
 			
@@ -217,18 +226,18 @@ sol_menu* sol_menu::create(int num)//构造函数
 		sprite->autorelease();
 
 		sprite->lable = num;
-		int kx = 0, ky = 0;
+		double kx = 0, ky = 0;
 		if (num == 0)
 		{
-			kx = 2.8, ky = 5;
+			kx = 2.0, ky = 5;
 		}
 		else if (num == 1)
 		{
-			kx = 1.8, ky = 5;
+			kx = 0.9, ky = 5;
 		}
 		else if (num == 2)
 		{
-			kx = 2.3, ky = 7;
+			kx = 2.0, ky = 6.05;
 		}
 		sprite->position = cocos2d::Vec2(origin.x - sprite->getContentSize().width * kx + visibleSize.width + 10, origin.y - sprite->getContentSize().height * ky + visibleSize.height - 5);
 		return sprite;
@@ -261,9 +270,9 @@ void sol_menu::buildsol(int country)
 				a_people = people::create("people3.png");
 			else if (country == 4)
 				a_people = people::create("people4.png");
-			a_people->init(HelloWorld::situation);
+			a_people->init(&HelloWorld::situation);
 			a_people->set_data(country);
-			a_people->setPosition(cocos2d::Vec2(HelloWorld::major_camp[country]->getPositionX() + 2 * X_SIZE, HelloWorld::major_camp[country]->getPositionY()));
+			a_people->setPosition(cocos2d::Vec2(HelloWorld::major_camp[country]->getPositionX() + 2 * imformation::X_SIZE, HelloWorld::major_camp[country]->getPositionY()));
 			HelloWorld::vec_people[country].push_back(a_people);
 
 			//auto body = PhysicsBody::createBox(a_people->getContentSize(), PhysicsMaterial(1000, 0, 0));
@@ -284,9 +293,9 @@ void sol_menu::buildsol(int country)
 				a_dog = dog::create("dog3.png");
 			else if (country == 4)
 				a_dog = dog::create("dog4.png");
-			a_dog->init(HelloWorld::situation);
+			a_dog->init(&HelloWorld::situation);
 			a_dog->set_data(country);
-			a_dog->setPosition(cocos2d::Vec2(HelloWorld::major_camp[country]->getPositionX() + 2 * X_SIZE, HelloWorld::major_camp[country]->getPositionY()));
+			a_dog->setPosition(cocos2d::Vec2(HelloWorld::major_camp[country]->getPositionX() + 2 * imformation::X_SIZE, HelloWorld::major_camp[country]->getPositionY()));
 			HelloWorld::vec_dog[country].push_back(a_dog);
 
 			//auto body = PhysicsBody::createBox(a_people->getContentSize(), PhysicsMaterial(1000, 0, 0));
@@ -307,9 +316,9 @@ void sol_menu::buildsol(int country)
 				a_tank = tank::create("tank3.png");
 			else if (country == 4)
 				a_tank = tank::create("tank4.png");
-			a_tank->init(HelloWorld::situation);
+			a_tank->init(&HelloWorld::situation);
 			a_tank->set_data(country);
-			a_tank->setPosition(cocos2d::Vec2(HelloWorld::major_factory[country]->getPositionX() + 2 * X_SIZE, HelloWorld::major_factory[country]->getPositionY()));
+			a_tank->setPosition(cocos2d::Vec2(HelloWorld::major_factory[country]->getPositionX() + 2 * imformation::X_SIZE, HelloWorld::major_factory[country]->getPositionY()));
 			HelloWorld::vec_tank[country].push_back(a_tank);
 
 			//auto body = PhysicsBody::createBox(a_people->getContentSize(), PhysicsMaterial(1000, 0, 0));

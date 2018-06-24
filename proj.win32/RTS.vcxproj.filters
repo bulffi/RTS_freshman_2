@@ -72,7 +72,6 @@
     <ClInclude Include="..\Classes\game\electric.h" />
     <ClInclude Include="..\Classes\game\factory.h" />
     <ClInclude Include="..\Classes\game\HelloWorldScene.h" />
-    <ClInclude Include="..\Classes\game\information.h" />
     <ClInclude Include="..\Classes\game\menu.h" />
     <ClInclude Include="..\Classes\game\micropather.h" />
     <ClInclude Include="..\Classes\game\mine.h" />

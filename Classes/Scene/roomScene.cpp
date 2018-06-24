@@ -139,12 +139,14 @@ void roomScene::update(float dt)
 		else if (tempt.find("START!!!!!!!!!!") == 0)
 		{
 			unscheduleUpdate();
+			CocosDenshion::SimpleAudioEngine::getInstance()->stopBackgroundMusic();
 			typedef std::chrono::duration<int, std::milli> millisceond;
 			std::this_thread::sleep_for(millisceond(90));
-
+			imformation::map_index = which_map+1;
+			HelloWorld::num_player = 4;
 			auto help=HelloWorld::createScene(pClient, imformation::my_number+1);
 			auto reScene = TransitionFade::create(1.0f, help);
-			Director::getInstance()->pushScene(reScene);
+			Director::getInstance()->replaceScene(reScene);
 		}
 		else if (tempt.find("0") == 0 || tempt.find("1") == 0 || tempt.find("2") == 0 || tempt.find("3") == 0)
 		{

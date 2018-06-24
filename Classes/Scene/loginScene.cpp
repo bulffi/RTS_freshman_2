@@ -37,7 +37,7 @@ bool loginScene::init()
 	auto background_color = LayerColor::create(Color4B(255, 255, 255, 255));
 	this->addChild(background_color, -1);
 
-	cocos2d::ui::TextField* textField = cocos2d::ui::TextField::create("favorite band (alphabat only) ", "fonts/Marker Felt.ttf", 80);
+	cocos2d::ui::TextField* textField = cocos2d::ui::TextField::create("your favorite band", "fonts/Marker Felt.ttf", 80);
 	textField->setMaxLengthEnabled(true);
 	textField->setMaxLength(20);
 	textField->setPosition(Point(visibleSize.width / 2, visibleSize.height / 2 + 50));

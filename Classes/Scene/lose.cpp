@@ -23,9 +23,11 @@ bool loseScene::init()
 	qury->setColor(Color3B(0, 0, 0));
 	qury->setPosition(origin.x + visibleSize.width / 2, origin.y + visibleSize.height*0.85);
 	this->addChild(qury);
-
-	SimpleAudioEngine::getInstance()->preloadBackgroundMusic("sound/David Bowie - Heroes.wav");
-	SimpleAudioEngine::getInstance()->playBackgroundMusic("sound/David Bowie - Heroes.wav");
+	if (UserDefault::getInstance()->getBoolForKey("isBackgroundMusic"))
+	{
+		SimpleAudioEngine::getInstance()->preloadBackgroundMusic("sound/David Bowie - Heroes.wav");
+		SimpleAudioEngine::getInstance()->playBackgroundMusic("sound/David Bowie - Heroes.wav");
+	}
 
 
 

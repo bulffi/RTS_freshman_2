@@ -5,10 +5,8 @@
 #include"unit.h"
 #include "cocos2d.h"
 #include"micropather.h"
-#define XMAX 50
-#define YMAX 50
-#define X_SIZE 32
-#define Y_SIZE 32
+#include"utility\information.h"
+
 class soldier :public unit, public micropather::Graph
 {
 public:
@@ -16,6 +14,7 @@ public:
 	static soldier* create(const char* filename);//构造函数
 	void updateMove(float dt);//移向敌军
 	void updateAttack(float dt);//攻击敌军
+	virtual void play_attack_music(int alternative) = 0;
 
 	//需要调用子类init_data来初始化的变量
 	int attack_power = 0;//攻击力
@@ -43,11 +42,11 @@ public:
 	//这个函数在【规划路径】的过程中会不断被调用
 	bool Passable(int nx, int ny)
 	{
-		if (nx >= 0 && nx < XMAX
-			&& ny >= 0 && ny < YMAX)
+		if (nx >= 0 && nx < imformation::XMAX
+			&& ny >= 0 && ny < imformation::YMAX)
 		{
-			int index = ny*XMAX + nx;
-			if ((p_map_situation)[index])
+			int index = ny*imformation::XMAX + nx;
+			if ((*p_map_situation)[index])
 			{
 				return true;
 			}
@@ -66,13 +65,13 @@ public:
 	void NodeToXY(void* node, int* x, int* y)
 	{
 		intptr_t index = (intptr_t)node;
-		*y = index / XMAX;
-		*x = index - *y * XMAX;
+		*y = index / imformation::XMAX;
+		*x = index - *y * imformation::XMAX;
 	}
 	//上一个函数的逆
 	void* XYToNode(int x, int y)
 	{
-		return (void*)(y*XMAX + x);
+		return (void*)(y*imformation::XMAX + x);
 	}
 	// LeastCostEstimate 以及下一个函数 AgjacentCost 无需了解
 	// 我继承的graph类里面有这两个纯虚函数 我必须override
@@ -178,8 +177,8 @@ public:
 	///这个函数是把传进来的鼠标GL坐标转化为瓦片坐标
 	cocos2d::Point tileCoordForPosition(cocos2d::Vec2 pos)
 	{
-		int x = pos.x / X_SIZE;
-		int y = (Y_SIZE * YMAX - pos.y) / Y_SIZE;
+		int x = pos.x / imformation::X_SIZE;
+		int y = (imformation::Y_SIZE * imformation::YMAX - pos.y) / imformation::Y_SIZE;
 
 		return cocos2d::Vec2(x, y);
 	}
@@ -187,8 +186,8 @@ public:
 	///这个函数是把瓦片坐标转化为鼠标GL坐标
 	cocos2d::Point positionForTileCoord(cocos2d::Vec2 pos)
 	{
-		int x = pos.x*X_SIZE+X_SIZE*0.5;
-		int y = Y_SIZE*YMAX - pos.y*Y_SIZE-Y_SIZE*0.5;
+		int x = pos.x*imformation::X_SIZE+ imformation::X_SIZE*0.5;
+		int y = imformation::Y_SIZE*imformation::YMAX - pos.y*imformation::Y_SIZE- imformation::Y_SIZE*0.5;
 
 		return cocos2d::Vec2(x, y);
 	}
@@ -202,7 +201,7 @@ public:
 	}
 
 
-	bool soldier::init(int* ptr)
+	bool soldier::init(std::vector<int>* ptr)
 	{
 		p_map_situation = ptr;
 		pather = new micropather::MicroPather(this, 2500, 8);
@@ -232,7 +231,7 @@ private:
 	int playerY;
 	int type_of_enemy;
 	micropather::MicroPather* pather;
-	int* p_map_situation;
+	std::vector<int>* p_map_situation;
 
 	
 	

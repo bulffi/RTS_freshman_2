@@ -8,7 +8,7 @@ class base :public building
 public:
 	static base* create(const char* filename);
 	void set_data(int country);//设置参数
-	void change_situation(int* situation, int condition);//改变situation
+	void change_situation(std::vector<int>& situation, int condition);//改变situation
 };
 
 

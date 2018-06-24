@@ -1,10 +1,37 @@
 #include "HelloWorldScene.h"
 #include "SimpleAudioEngine.h"
-#include"information.h"
+#include"utility\information.h"
 #include<iostream>
 #include<vector>
 #include"menu.h"
+#include"Scene\lose.h"
+USING_NS_CC;
+int HelloWorld::my_country;
+int imformation::map_index;
+//ÀàÍâÄ¬ÈÏ³õÊ¼»¯µØÍ¼²ÎÊý
+int imformation::XMAX;
+int imformation::YMAX;
+int imformation::X_SIZE;
+int imformation::Y_SIZE;
+int imformation::X_BASE1;
+int imformation::Y_BASE1;
+int imformation::X_BASE2;
+int imformation::Y_BASE2;
+int imformation::X_BASE3;
+int imformation::Y_BASE3;
+int imformation::X_BASE4;
+int imformation::Y_BASE4;
+//¿ó³µµÄÍßÆ¬×ø±ê
+int imformation::X_MINE1;
+int imformation::Y_MINE1;
+int imformation::X_MINE2;
+int imformation::Y_MINE2;
+int imformation::X_MINE3;
+int imformation::Y_MINE3;
+int imformation::X_MINE4;
+int imformation::Y_MINE4;
 
+//·þÎñÆ÷Êý¾Ý
 /*std::string imformation::myname;
 bool imformation::am_i_host;
 bool imformation::am_i_in_room;
@@ -14,42 +41,38 @@ bool imformation::my_team;
 int imformation::my_number;
 std::vector<std::tuple<std::string, bool, bool>> imformation::guest_list;//name nation team*/
 
-
-#define XMAX 50
-#define YMAX 50
-#define X_SIZE 32
-#define Y_SIZE 32
-//»ùµØµÄÍßÆ¬×ø±ê
-#define X_BASE1 4
-#define Y_BASE1 45
-#define X_BASE2 45
-#define Y_BASE2 4
-#define X_BASE3 4
-#define Y_BASE3 4
-#define X_BASE4 45
-#define Y_BASE4 45
-USING_NS_CC;
 extern client* pClient;
 int tempt;
-int HelloWorld::situation[XMAX*YMAX];
-std::vector<cocos2d::Vec2> HelloWorld::vec_mappos;
-std::vector<base*> HelloWorld::vec_base;
-std::vector<camp*> HelloWorld::major_camp;//¸÷·½µÄÖ÷Òª±øÓª
-std::vector<factory*> HelloWorld::major_factory;//¸÷·½µÄÖ÷ÒªÕ½³µ¹¤³§
-std::vector<std::vector<people*>> HelloWorld::vec_people;
-std::vector<std::vector<camp*>> HelloWorld::vec_camp;
+int HelloWorld::num_player;
+bool if_there_is_effect;
+//µØÍ¼Êý¾Ý
+cocos2d::TMXTiledMap* HelloWorld::_tileMap;
+//int HelloWorld::situation[imformation::XMAX*imformation::YMAX];
+std::vector<int> HelloWorld::situation;
+std::vector<cocos2d::Vec2> HelloWorld::vec_mappos;//µØÍ¼Æ«ÒÆÁ¿
+
+//±øÖÖ¼°½¨Öþ
 std::vector<std::vector<soldier*>> HelloWorld::vec_chosed_soldier;
+std::vector<std::vector<people*>> HelloWorld::vec_people;
 std::vector<std::vector<dog*>> HelloWorld::vec_dog;
 std::vector<std::vector<tank*>> HelloWorld::vec_tank;
+std::vector<base*> HelloWorld::vec_base;
+std::vector<std::vector<camp*>> HelloWorld::vec_camp;
+std::vector<camp*> HelloWorld::major_camp;//¸÷·½µÄÖ÷Òª±øÓª
 std::vector<std::vector<mine*>> HelloWorld::vec_mine;
+std::vector<std::vector<mine_car*>> HelloWorld::vec_mine_car;
+std::vector<unit*> HelloWorld::vec_mines;
 std::vector<std::vector<electric*>> HelloWorld::vec_electric;
 std::vector<std::vector<factory*>> HelloWorld::vec_factory;
-cocos2d::TMXTiledMap* HelloWorld::_tileMap;
+std::vector<factory*> HelloWorld::major_factory;//¸÷·½µÄÖ÷ÒªÕ½³µ¹¤³§
+
+//²Ëµ¥Êý¾Ý
 cocos2d::Vector<build_menu*> HelloWorld::vec_buimenu;//´¢´æ½¨Öþ²Ëµ¥µÄÈÝÆ÷
 cocos2d::Vector<sol_menu*> HelloWorld::vec_solmenu;//´¢´æ±øÖÖ²Ëµ¥µÄÈÝÆ÷
 
 Scene* HelloWorld::createScene(client* p_to_Client,int side)
 {
+	if_there_is_effect = UserDefault::getInstance()->getBoolForKey("isEffect",true);
 	pClient = p_to_Client;
 	tempt = side;
 	if (side == 1)
@@ -69,7 +92,7 @@ Scene* HelloWorld::createScene(client* p_to_Client,int side)
 	scene->getPhysicsWorld()->setGravity(gravity);
 
 	//ÉèÖÃ³¡¾°µÄ´óÐ¡
-	cocos2d::Size scene_size(XMAX*X_SIZE, YMAX*Y_SIZE);
+	cocos2d::Size scene_size(imformation::XMAX*imformation::X_SIZE, imformation::YMAX*imformation::Y_SIZE);
 	scene->setContentSize(scene_size);
 
 	auto layer = HelloWorld::create();
@@ -83,15 +106,14 @@ static void problemLoading(const char* filename)
 }
 cocos2d::Point tileCoordFromPosition(cocos2d::Vec2 pos)//GL×ø±ê×ªÍßÆ¬×ø±ê
 {
-	int x = pos.x / X_SIZE;
-	int y = (Y_SIZE * YMAX - pos.y) / Y_SIZE;
-
+	int x = pos.x / imformation::X_SIZE;
+	int y = (imformation::Y_SIZE * imformation::YMAX - pos.y) / imformation::Y_SIZE;
 	return cocos2d::Vec2(x, y);
 }
 cocos2d::Vec2 tileToGL(cocos2d::Point point)//ÍßÆ¬×ø±ê×ªGL×ø±ê
 {
 	int x = (point.x + 0.5) * 32;
-	int y = (YMAX - point.y - 0.5) * 32;
+	int y = (imformation::YMAX - point.y - 0.5) * 32;
 	cocos2d::Vec2 vec(x, y);
 	return vec;
 }
@@ -104,55 +126,98 @@ bool HelloWorld::init()
 	my_country = tempt;
     auto visibleSize = Director::getInstance()->getVisibleSize();
     Vec2 origin = Director::getInstance()->getVisibleOrigin();
+	CocosDenshion::SimpleAudioEngine::getInstance()->preloadEffect("sound/fire_enemy.WAV");
+	CocosDenshion::SimpleAudioEngine::getInstance()->preloadEffect("sound/dog_emeey.WAV");
+	CocosDenshion::SimpleAudioEngine::getInstance()->preloadEffect("sound/tank_emey.WAV");
+	CocosDenshion::SimpleAudioEngine::getInstance()->preloadEffect("sound/construct.WAV");
+	CocosDenshion::SimpleAudioEngine::getInstance()->preloadEffect("sound/baozha.WAV");
 
 	//³õÊ¼»¯ËùÓÐvector
 	std::vector<people*> vec_1;
-	for (int i = 1; i <= 5; i++)
-		vec_people.push_back(vec_1);
 	std::vector<camp*> vec_2;
-	for (int i = 1; i <= 5; i++)
-		vec_camp.push_back(vec_2);
 	std::vector<soldier*> vec_3;
-	for (int i = 1; i <= 5; i++)
-		vec_chosed_soldier.push_back(vec_3);
 	std::vector<dog*> vec_4;
-	for (int i = 1; i <= 5; i++)
-		vec_dog.push_back(vec_4);
 	std::vector<tank*> vec_5;
-	for (int i = 1; i <= 5; i++)
-		vec_tank.push_back(vec_5);
 	std::vector<factory*> vec_6;
-	for (int i = 1; i <= 5; i++)
-		vec_factory.push_back(vec_6);
 	std::vector<mine*> vec_7;
-	for (int i = 1; i <= 5; i++)
-		vec_mine.push_back(vec_7);
 	std::vector<electric*> vec_8;
-	for (int i = 1; i <= 5; i++)
-		vec_electric.push_back(vec_8);
-	for (int i = 1; i <= 5; i++)
-		set_building.push_back(0);
-	for (int i = 1; i <= 5; i++) {
-		mouseDownPosition.push_back(cocos2d::Vec2(0, 0));
-		real_mouseDownPosition.push_back(cocos2d::Vec2(0, 0));
-	}
+	std::vector<mine_car*> vec_0;
 	camp* mmp;
 	factory* mmp2;
 	for (int i = 1; i <= 5; i++) {
+		vec_people.push_back(vec_1);
+		vec_camp.push_back(vec_2);
+		vec_chosed_soldier.push_back(vec_3);
+		vec_dog.push_back(vec_4);
+		vec_tank.push_back(vec_5);
+		vec_factory.push_back(vec_6);
+		vec_mine.push_back(vec_7);
+		vec_electric.push_back(vec_8);
+		vec_mine_car.push_back(vec_0);
+		set_building.push_back(0);
+		mouseDownPosition.push_back(cocos2d::Vec2(0, 0));
+		real_mouseDownPosition.push_back(cocos2d::Vec2(0, 0));
 		major_camp.push_back(mmp);
 		major_factory.push_back(mmp2);
-	}
-	for (int i = 1; i <= 5; i++) {
 		vec_base.push_back(NULL);
+	}
+
+	//³õÊ¼»¯µØÍ¼²ÎÊý
+	if (imformation::map_index == 1) {
+		imformation::XMAX = 50;
+		imformation::YMAX = 50;
+		imformation::X_SIZE = 32;
+		imformation::Y_SIZE = 32;
+		imformation::X_BASE1 = 4;
+		imformation::Y_BASE1 = 45;
+		imformation::X_BASE2 = 45;
+		imformation::Y_BASE2 = 4;
+		imformation::X_BASE3 = 4;
+		imformation::Y_BASE3 = 4;
+		imformation::X_BASE4 = 45;
+		imformation::Y_BASE4 = 45;
+		imformation::X_MINE1 = 2;
+		imformation::Y_MINE1 = 40;
+		imformation::X_MINE2 = 40;
+		imformation::Y_MINE2 = 2;
+		imformation::X_MINE3 = 2;
+		imformation::Y_MINE3 = 2;
+		imformation::X_MINE4 = 40;
+		imformation::Y_MINE4 = 40;
+	}
+	else if(imformation::map_index == 2) {
+		imformation::XMAX = 100;
+		imformation::YMAX = 100;
+		imformation::X_SIZE = 32;
+		imformation::Y_SIZE = 32;
+		imformation::X_BASE1 = 8;
+		imformation::Y_BASE1 = 95;
+		imformation::X_BASE2 = 90;
+		imformation::Y_BASE2 = 10;
+		imformation::X_BASE3 = 5;
+		imformation::Y_BASE3 = 11;
+		imformation::X_BASE4 = 90;
+		imformation::Y_BASE4 = 85;
+		imformation::X_MINE1 = 4;
+		imformation::Y_MINE1 = 81;
+		imformation::X_MINE2 = 76;
+		imformation::Y_MINE2 = 4;
+		imformation::X_MINE3 = 19;
+		imformation::Y_MINE3 = 14;
+		imformation::X_MINE4 = 76;
+		imformation::Y_MINE4 = 95;
 	}
 
 
 	//ÉèÖÃ²ãµÄ´óÐ¡
-	cocos2d::Size scene_size(XMAX*X_SIZE, YMAX*Y_SIZE);
-
+	cocos2d::Size scene_size(imformation::XMAX*imformation::X_SIZE, imformation::YMAX*imformation::Y_SIZE);
 	this->setContentSize(scene_size);
-	//¼ÓÈëÍßÆ¬µØÍ¼
-	_tileMap = TMXTiledMap::create("map/first.tmx");
+
+	//¼ÓÈëÍßÆ¬µØÍ¼£¬²¢ÉèÖÃÎ»ÖÃ
+	if(imformation::map_index==1)
+		_tileMap = TMXTiledMap::create("map/first.tmx");
+	else if(imformation::map_index == 2)
+		_tileMap = TMXTiledMap::create("map2/redalert2.tmx");
 	if(imformation::my_number==1)
 		_tileMap->setPosition(Vec2(0, 0));
 	else if(imformation::my_number == 2)
@@ -161,7 +226,6 @@ bool HelloWorld::init()
 		_tileMap->setPosition(Vec2(0, -_tileMap->getContentSize().height + visibleSize.height));
 	else if (imformation::my_number == 4)
 		_tileMap->setPosition(Vec2(-_tileMap->getContentSize().width - 211 + visibleSize.width, 0));
-
 	startpos = _tileMap->getPosition();
 	vec_mappos.push_back(Vec2(0, 0));
 	vec_mappos.push_back(Vec2(0, 0));
@@ -169,24 +233,27 @@ bool HelloWorld::init()
 	vec_mappos.push_back(Vec2(0, -_tileMap->getContentSize().height + visibleSize.height));
 	vec_mappos.push_back(Vec2(-_tileMap->getContentSize().width - 211 + visibleSize.width, 0));
 	this->addChild(_tileMap, 0, 100);
+
 	//¼ÓÈëÅö×²²ã
 	_colliable = _tileMap->layerNamed("collidable");
 	_colliable->setVisible(false);
-	//³õÊ¼»¯situation
-	for (int i = 0; i < YMAX; i++)
+	//³õÊ¼»¯Åö×²²ãsituation
+	for (int i = 0; i < imformation::YMAX; i++)
 	{
-		for (int j = 0; j < XMAX; j++)
+		for (int j = 0; j < imformation::XMAX; j++)
 		{
 			Vec2 tileCoord(j, i);
 			int tileGid = _colliable->getTileGIDAt(tileCoord);
 			if (tileGid > 0)
-				situation[j + XMAX*i] = 0;
+				//situation[j + XMAX*i] = 0;
+				situation.push_back(0);
 			else
-				situation[j + XMAX*i] = 1;
+				//situation[j + XMAX*i] = 1;
+				situation.push_back(1);
 		}
 	}
 
-	//¶¨ÒåÊÀ½çµÄ±ß½ç
+	//ÊÀ½çµÄ±ß½çµÄÎïÀíÒýÇæ
 	auto abody = PhysicsBody::createEdgeBox(scene_size, PhysicsMaterial(1000, 0, 0), 1.0f);
 	this->setPhysicsBody(abody);
 
@@ -196,10 +263,18 @@ bool HelloWorld::init()
 	vec_base[3] = base::create("base3.png");
 	vec_base[4] = base::create("base4.png");
 	for (int i = 1; i <= 4; i++)
-	{
 		vec_base[i]->set_data(i);
-	}
-	//ÎïÀíÒýÇæ±ß¿ò
+	//´´½¨Ã¿Ò»·½¿ó
+	unit* mines1 = unit::create("mountain.png");
+	unit* mines2 = unit::create("mountain.png");
+	unit* mines3 = unit::create("mountain.png");
+	unit* mines4 = unit::create("mountain.png");
+	vec_mines.push_back(mines1);
+	vec_mines.push_back(mines1);
+	vec_mines.push_back(mines2);
+	vec_mines.push_back(mines3);
+	vec_mines.push_back(mines4);
+	//ÉèÖÃ»ùµØÎïÀíÒýÇæ±ß¿ò
 	cocos2d::Size building_size(vec_base[1]->getContentSize().width, vec_base[1]->getContentSize().height);
 	cocos2d::PhysicsBody* body1 = PhysicsBody::createEdgeBox(building_size, PhysicsMaterial(10, 0, 0), 1.0f);
 	cocos2d::PhysicsBody* body2 = PhysicsBody::createEdgeBox(building_size, PhysicsMaterial(10, 0, 0), 1.0f);
@@ -209,48 +284,90 @@ bool HelloWorld::init()
 	vec_base[2]->setPhysicsBody(body2);
 	vec_base[3]->setPhysicsBody(body3);
 	vec_base[4]->setPhysicsBody(body4);
-	//ÉèÖÃÎ»ÖÃ
+	//ÉèÖÃ»ùµØÎ»ÖÃ
 	for (int i = 1; i <= 4; i++)
 		vec_base[i]->setAnchorPoint(Vec2(0.5, 0.5));
-	vec_base[1]->setPosition(cocos2d::Vec2(32 * (X_BASE1 + 0.5), 32 * (50 - Y_BASE1 - 0.5)));
-	vec_base[2]->setPosition(cocos2d::Vec2(32 * (X_BASE2 + 0.5), 32 * (50 - Y_BASE2 - 0.5)));
+	vec_base[1]->setPosition(cocos2d::Vec2(32 * (imformation::X_BASE1 + 0.5), 32 * (imformation::YMAX - imformation::Y_BASE1 - 0.5)));
+	vec_base[2]->setPosition(cocos2d::Vec2(32 * (imformation::X_BASE2 + 0.5), 32 * (imformation::YMAX - imformation::Y_BASE2 - 0.5)));
 	if(num_player>=3)
-		vec_base[3]->setPosition(cocos2d::Vec2(32 * (X_BASE3 + 0.5), 32 * (50 - Y_BASE3 - 0.5)));
+		vec_base[3]->setPosition(cocos2d::Vec2(32 * (imformation::X_BASE3 + 0.5), 32 * (imformation::YMAX - imformation::Y_BASE3 - 0.5)));
 	if (num_player >= 4)
-		vec_base[4]->setPosition(cocos2d::Vec2(32 * (X_BASE4 + 0.5), 32 * (50 - Y_BASE4 - 0.5)));
-	vec_base[1]->tile_position_point[0] = X_BASE1;
-	vec_base[1]->tile_position_point[1] = Y_BASE1;
-	vec_base[2]->tile_position_point[0] = X_BASE2;
-	vec_base[2]->tile_position_point[1] = Y_BASE2;
-	vec_base[3]->tile_position_point[0] = X_BASE3;
-	vec_base[3]->tile_position_point[1] = Y_BASE3;
-	vec_base[4]->tile_position_point[0] = X_BASE4;
-	vec_base[4]->tile_position_point[1] = Y_BASE4;
-	//ÉèÖÃÑªÌõ
+		vec_base[4]->setPosition(cocos2d::Vec2(32 * (imformation::X_BASE4 + 0.5), 32 * (imformation::YMAX - imformation::Y_BASE4 - 0.5)));
+	vec_base[1]->tile_position_point[0] = imformation::X_BASE1;
+	vec_base[1]->tile_position_point[1] = imformation::Y_BASE1;
+	vec_base[2]->tile_position_point[0] = imformation::X_BASE2;
+	vec_base[2]->tile_position_point[1] = imformation::Y_BASE2;
+	vec_base[3]->tile_position_point[0] = imformation::X_BASE3;
+	vec_base[3]->tile_position_point[1] = imformation::Y_BASE3;
+	vec_base[4]->tile_position_point[0] = imformation::X_BASE4;
+	vec_base[4]->tile_position_point[1] = imformation::Y_BASE4;
+	//ÉèÖÃ»ùµØÑªÌõ
 	for (int i = 1; i <= 4; i++)
 		createblood(vec_base[i], 4);
-
+	//½«»ùµØ¼ÓÈëµ½mapÖÐ
 	_tileMap->addChild(vec_base[1]);
 	_tileMap->addChild(vec_base[2]);
 	if(num_player>=3)
 		_tileMap->addChild(vec_base[3]);
 	if (num_player >= 4)
 		_tileMap->addChild(vec_base[4]);
-	//¸ü¸Äsituation
+	//¸ü¸Ä»ùµØµÄsituation
 	for(int i=-1;i<=1;i++)
 		for(int j= -1;j<=1;j++)
-			situation[(X_BASE1+j) + XMAX*(Y_BASE1+i)] = 0;
+			situation[(imformation::X_BASE1+j) + imformation::XMAX*(imformation::Y_BASE1+i)] = 0;
 	for (int i = -1; i <= 1; i++)
 		for (int j = -1; j <= 1; j++)
-			situation[(X_BASE2+j) + XMAX*(Y_BASE2+i)] = 0;
+			situation[(imformation::X_BASE2+j) + imformation::XMAX*(imformation::Y_BASE2+i)] = 0;
 	if(num_player>=3)
 		for (int i = -1; i <= 1; i++)
 			for (int j = -1; j <= 1; j++)
-				situation[(X_BASE3 + j) + XMAX*(Y_BASE3 + i)] = 0;
+				situation[(imformation::X_BASE3 + j) + imformation::XMAX*(imformation::Y_BASE3 + i)] = 0;
 	if (num_player >= 4)
 		for (int i = -1; i <= 1; i++)
 			for (int j = -1; j <= 1; j++)
-				situation[(X_BASE4 + j) + XMAX*(Y_BASE4 + i)] = 0;
+				situation[(imformation::X_BASE4 + j) + imformation::XMAX*(imformation::Y_BASE4 + i)] = 0;
+
+
+	//ÉèÖÃ¿óÉ½ÎïÀíÒýÇæ±ß¿ò
+	cocos2d::Size mine_size(vec_mines[1]->getContentSize().width, vec_mines[1]->getContentSize().height);
+	cocos2d::PhysicsBody* body5 = PhysicsBody::createEdgeBox(mine_size, PhysicsMaterial(10, 0, 0), 1.0f);
+	cocos2d::PhysicsBody* body6 = PhysicsBody::createEdgeBox(mine_size, PhysicsMaterial(10, 0, 0), 1.0f);
+	cocos2d::PhysicsBody* body7 = PhysicsBody::createEdgeBox(mine_size, PhysicsMaterial(10, 0, 0), 1.0f);
+	cocos2d::PhysicsBody* body8 = PhysicsBody::createEdgeBox(mine_size, PhysicsMaterial(10, 0, 0), 1.0f);
+	vec_base[1]->setPhysicsBody(body5);
+	vec_base[2]->setPhysicsBody(body6);
+	vec_base[3]->setPhysicsBody(body7);
+	vec_base[4]->setPhysicsBody(body8);
+	//¿óÉ½µÄÎ»ÖÃ
+	int x[5] = { 0,imformation::X_MINE1,imformation::X_MINE2 ,imformation::X_MINE3 ,imformation::X_MINE4 };
+	int y[5] = { 0,imformation::Y_MINE1,imformation::Y_MINE2,imformation::Y_MINE3,imformation::Y_MINE4 };
+	for (int i = 1; i <= 4; i++)
+	{
+		vec_mines[i]->setAnchorPoint(Vec2(0.5, 0.5));
+		vec_mines[i]->setPosition(cocos2d::Vec2(32 * (x[i] + 0.5), 32 * (imformation::YMAX - y[i] - 0.5)));
+	}
+	//½«¿óÉ½¼ÓÈëµ½mapÖÐ
+	_tileMap->addChild(vec_mines[1]);
+	_tileMap->addChild(vec_mines[2]);
+	if (num_player >= 3)
+		_tileMap->addChild(vec_mines[3]);
+	if (num_player >= 4)
+		_tileMap->addChild(vec_mines[4]);
+	//¸ü¸Ä¿óÉ½µÄsituation
+	for (int i = -1; i <= 1; i++)
+		for (int j = -1; j <= 1; j++)
+			situation[(imformation::X_MINE1 + j) + imformation::XMAX*(imformation::Y_MINE1 + i)] = 0;
+	for (int i = -1; i <= 1; i++)
+		for (int j = -1; j <= 1; j++)
+			situation[(imformation::X_MINE2 + j) + imformation::XMAX*(imformation::Y_MINE2 + i)] = 0;
+	if (num_player >= 3)
+		for (int i = -1; i <= 1; i++)
+			for (int j = -1; j <= 1; j++)
+				situation[(imformation::X_MINE3 + j) + imformation::XMAX*(imformation::Y_MINE3 + i)] = 0;
+	if (num_player >= 4)
+		for (int i = -1; i <= 1; i++)
+			for (int j = -1; j <= 1; j++)
+				situation[(imformation::X_MINE4 + j) + imformation::XMAX*(imformation::Y_MINE4 + i)] = 0;
 
 	//³õÊ¼»¯ÅÔÀ¸
 	initmenu();
@@ -343,24 +460,7 @@ void HelloWorld::update(float dt)//½ÓÊÕ·þÎñÆ÷ÏûÏ¢
 			country = 3;
 		else if (pmessage[0] == '4')
 			country = 4;
-		if (pmessage[1] == 'B')//Èç¹ûÊÇ°´Å¥ÊÂ¼þ
-		{
-			if (pmessage[2] == '1')
-				button_soldier(country);
-			else if (pmessage[2] == '2')
-				button_dog(country);
-			else if (pmessage[2] == '3')
-				button_tank(country);
-			else if (pmessage[2] == '4')
-				button_camp(country);
-			else if (pmessage[2] == '5')
-				button_electric(country);
-			else if (pmessage[2] == '6')
-				button_mine(country);
-			else if (pmessage[2] == '7')
-				button_factory(country);
-		}
-		else if (pmessage[1] == 'M')//Èç¹ûÊÇÊó±êÊÂ¼þ 
+		if (pmessage[1] == 'M')//Èç¹ûÊÇÊó±êÊÂ¼þ 
 		{
 			if (pmessage[2] == 'D')//Èç¹ûÊÇ°´ÏÂÊó±ê
 			{
@@ -400,7 +500,7 @@ void HelloWorld::update(float dt)//½ÓÊÕ·þÎñÆ÷ÏûÏ¢
 							else
 							{
 								bool is_click_on_a_friend = 0;
-								//ÅÐ¶ÏÊÇ·ñµãÉÏÁËÐ¡±ø
+								//ÅÐ¶Ï×ó¼üÊÇ·ñµãÉÏÁËÐ¡±ø
 								for (int i = 0; vec_people[country].size() != 0 && i <= vec_people[country].size() - 1; i++)
 								{
 									cocos2d::Rect rect = vec_people[country][i]->getBoundingBox();
@@ -1129,6 +1229,10 @@ void HelloWorld::update(float dt)//½ÓÊÕ·þÎñÆ÷ÏûÏ¢
 					for (int i = 0; i < which; i++)
 					{
 						iter++;
+					}	
+					if (if_there_is_effect)
+					{
+						CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("baozha.WAV");
 					}
 					auto bar0 = (*iter)->getChildByTag(0);
 					auto progress = (*iter)->getChildByTag(1);
@@ -1171,6 +1275,7 @@ void HelloWorld::update(float dt)//½ÓÊÕ·þÎñÆ÷ÏûÏ¢
 					(*iter)->change_situation(situation, 1);
 					(*iter)->removeFromParent();
 					vec_camp[j].erase(iter);
+				
 				}
 			}break;
 			case('M') :
@@ -1178,15 +1283,35 @@ void HelloWorld::update(float dt)//½ÓÊÕ·þÎñÆ÷ÏûÏ¢
 				if (which < vec_mine[tempt[1] - '0'].size())
 				{
 					auto iter = vec_mine[tempt[1] - '0'].begin();
-					int j = tempt[1] - '0';
+					auto cariter = vec_mine_car[tempt[1] - '0'].begin();
+					int j = tempt[1] - '0'; 
+					if (if_there_is_effect)
+					{
+						CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("baozha.WAV");
+					}
 					for (int i = 0; i < which; i++)
 					{
 						iter++;
+						cariter++;
 					}
 					auto bar0 = (*iter)->getChildByTag(0);
 					auto progress = (*iter)->getChildByTag(1);
 					bar0->removeFromParent();
 					progress->removeFromParent();
+					if (vec_mine[j].size() == 0)
+					{
+						if (j == 1)
+							this->unschedule(schedule_selector(HelloWorld::updatemoney1));
+						else if (j == 2)
+							this->unschedule(schedule_selector(HelloWorld::updatemoney2));
+						else if (j == 3)
+							this->unschedule(schedule_selector(HelloWorld::updatemoney3));
+						else if (j == 4)
+							this->unschedule(schedule_selector(HelloWorld::updatemoney4));
+					}
+					(*cariter)->unschedule(schedule_selector(mine_car::updatecar1));
+					(*cariter)->removeFromParent();
+					vec_mine_car[j].erase(cariter);
 					//²éÕÒÕýÔÚ¹¥»÷¸Ãµ¥Î»µÄÆäËû¹ú¼Òµ¥Î»
 					for (int j2 = 1; j2 <= 4; j2++)
 						if (j2 != j)
@@ -1205,6 +1330,7 @@ void HelloWorld::update(float dt)//½ÓÊÕ·þÎñÆ÷ÏûÏ¢
 					(*iter)->change_situation(situation, 1);
 					(*iter)->removeFromParent();
 					vec_mine[j].erase(iter);
+
 				}
 			}break;
 			case('E') :
@@ -1216,6 +1342,10 @@ void HelloWorld::update(float dt)//½ÓÊÕ·þÎñÆ÷ÏûÏ¢
 					for (int i = 0; i < which; i++)
 					{
 						iter++;
+					}
+					if (if_there_is_effect)
+					{
+						CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("baozha.WAV");
 					}
 					auto bar0 = (*iter)->getChildByTag(0);
 					auto progress = (*iter)->getChildByTag(1);
@@ -1250,6 +1380,10 @@ void HelloWorld::update(float dt)//½ÓÊÕ·þÎñÆ÷ÏûÏ¢
 					for (int i = 0; i < which; i++)
 					{
 						iter++;
+					}
+					if (if_there_is_effect)
+					{
+						CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("baozha.WAV");
 					}
 					auto bar0 = (*iter)->getChildByTag(0);
 					auto progress = (*iter)->getChildByTag(1);
@@ -1305,6 +1439,10 @@ void HelloWorld::update(float dt)//½ÓÊÕ·þÎñÆ÷ÏûÏ¢
 					{
 						iter++;
 					}
+					if (if_there_is_effect)
+					{
+						CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("baozha.WAV");
+					}
 					if (*iter)
 					{
 						auto bar0 = (*iter)->getChildByTag(0);
@@ -1329,6 +1467,12 @@ void HelloWorld::update(float dt)//½ÓÊÕ·þÎñÆ÷ÏûÏ¢
 						(*iter)->change_situation(situation, 1);
 						(*iter)->removeFromParent();
 						*iter = NULL;
+						if (which_base == my_country)
+						{
+							auto help = loseScene::createScene();
+							auto reScene = TransitionFade::create(1.0f, help);
+							Director::getInstance()->pushScene(reScene);
+						}
 						
 					}
 				}
@@ -1337,214 +1481,8 @@ void HelloWorld::update(float dt)//½ÓÊÕ·þÎñÆ÷ÏûÏ¢
 			}
 		}
 	}
-	
 }
 
-void HelloWorld::menuItemsoldierCallback(cocos2d::Ref* pSender)//·¢ËÍ´´½¨Ò»¸öÊ¿±øµÄÇëÇó
-{
-	if (!vec_camp[my_country].empty())
-	{
-		if(my_country == 1)
-			pClient->sendMessage("1B1$");
-		else if (my_country == 2)
-			pClient->sendMessage("2B1$");
-		else if (my_country == 3)
-			pClient->sendMessage("3B1$");
-		else if (my_country == 4)
-			pClient->sendMessage("4B1$");
-
-	}
-};
-void HelloWorld::button_soldier(int country)//´´½¨Ê¿±ø
-{
-	people* a_people;
-	if (country == 1)
-		a_people = people::create("people1.png");
-	else if (country == 2)
-		a_people = people::create("people2.png");
-	else if (country == 3)
-		a_people = people::create("people3.png");
-	else if (country == 4)
-		a_people = people::create("people4.png");
-	a_people->init(situation);
-	a_people->set_data(country);
-	a_people->setPosition(cocos2d::Vec2(major_camp[country]->getPositionX() + 2 * X_SIZE, major_camp[country]->getPositionY()));
-	vec_people[country].push_back(a_people);
-
-	//auto body = PhysicsBody::createBox(a_people->getContentSize(), PhysicsMaterial(1000, 0, 0));
-	auto body = PhysicsBody::createCircle(15, PhysicsMaterial(1000, 0, 0));
-	a_people->setPhysicsBody(body);
-	createblood(a_people,1);
-	this->addChild(a_people, 0);
-
-}
-
-void HelloWorld::menuItemdogCallback(cocos2d::Ref* pSender)//·¢ËÍ´´½¨Ò»¸ö¹·µÄÇëÇó
-{
-	if (!vec_camp[my_country].empty())
-	{
-		if (my_country == 1)
-			pClient->sendMessage("1B2$");
-		else if (my_country == 2)
-			pClient->sendMessage("2B2$");
-		else if (my_country == 3)
-			pClient->sendMessage("3B2$");
-		else if (my_country == 4)
-			pClient->sendMessage("4B2$");
-
-	}
-};
-void HelloWorld::button_dog(int country)//´´½¨¹·
-{
-	dog* a_dog;
-	if (country == 1)
-		a_dog = dog::create("dog1.png");
-	else if (country == 2)
-		a_dog = dog::create("dog2.png");
-	else if (country == 3)
-		a_dog = dog::create("dog3.png");
-	else if (country == 4)
-		a_dog = dog::create("dog4.png");
-	a_dog->init(situation);
-	a_dog->set_data(country);
-	a_dog->setPosition(cocos2d::Vec2(major_camp[country]->getPositionX() + 2 * X_SIZE, major_camp[country]->getPositionY()));
-	vec_dog[country].push_back(a_dog);
-
-	auto body = PhysicsBody::createCircle(a_dog->getContentSize().width/2, PhysicsMaterial(1000, 0, 0));
-	a_dog->setPhysicsBody(body);
-	createblood(a_dog,1);
-	this->addChild(a_dog, 0);
-}
-
-void HelloWorld::menuItemtankCallback(cocos2d::Ref* pSender)//·¢ËÍ´´½¨Ò»¸öÌ¹¿ËµÄÇëÇó
-{
-	if (!vec_factory[my_country].empty())
-	{
-		if (my_country == 1)
-			pClient->sendMessage("1B3$");
-		else if (my_country == 2)
-			pClient->sendMessage("2B3$");
-		else if (my_country == 3)
-			pClient->sendMessage("3B3$");
-		else if (my_country == 4)
-			pClient->sendMessage("4B3$");
-
-	}
-};
-void HelloWorld::button_tank(int country)//´´½¨Ì¹¿Ë
-{
-	tank* a_tank;
-	if (country == 1)
-		a_tank = tank::create("tank1.png");
-	else if (country == 2)
-		a_tank = tank::create("tank2.png");
-	else if (country == 3)
-		a_tank = tank::create("tank3.png");
-	else if (country == 4)
-		a_tank = tank::create("tank4.png");
-	a_tank->init(situation);
-	a_tank->set_data(country);
-	a_tank->setPosition(cocos2d::Vec2(major_factory[country]->getPositionX() + 2 * X_SIZE, major_factory[country]->getPositionY()));
-	vec_tank[country].push_back(a_tank);
-
-	//auto body = PhysicsBody::createBox(a_tank->getContentSize(), PhysicsMaterial(1000, 0, 0));
-	auto body = PhysicsBody::createCircle(18, PhysicsMaterial(1000, 0, 0));
-	a_tank->setPhysicsBody(body);
-	createblood(a_tank,1);
-	this->addChild(a_tank, 0);
-}
-
-void HelloWorld::menuItemcampCallback(cocos2d::Ref* pSender)//·¢ËÍ´´½¨Ò»¸ö±øÓªµÄÇëÇó
-{
-	if (my_country == 1)
-		pClient->sendMessage("1B4$");
-	else if (my_country == 2)
-		pClient->sendMessage("2B4$");
-	else if (my_country == 3)
-		pClient->sendMessage("3B4$");
-	else if (my_country == 4)
-		pClient->sendMessage("4B4$");
-}
-void HelloWorld::button_camp(int country)//´´½¨±øÓª
-{
-	//ÏÈÈ¡ÏûËùÓÐ¼º·½µ¥Î»µÄÑ¡ÖÐ×´Ì¬
-	for (int i = 0; vec_chosed_soldier[country].size() != 0 && i <= vec_chosed_soldier[country].size() - 1; i++)
-	{
-		vec_chosed_soldier[country][i]->setTexture(vec_chosed_soldier[country][i]->texture_normal);
-		
-	}
-	vec_chosed_soldier[country].clear();
-	set_building[country] = 11;
-}
-
-void HelloWorld::menuItemelectricCallback(cocos2d::Ref* pSender)//·¢ËÍ´´½¨Ò»¸öµç³§µÄÇëÇó
-{
-	if (my_country == 1)
-		pClient->sendMessage("1B5$");
-	else if (my_country == 2)
-		pClient->sendMessage("2B5$");
-	else if (my_country == 3)
-		pClient->sendMessage("3B5$");
-	else if (my_country == 4)
-		pClient->sendMessage("4B5$");
-}
-void HelloWorld::button_electric(int country)//´´½¨µç³§
-{
-	//ÏÈÈ¡ÏûËùÓÐ¼º·½µ¥Î»µÄÑ¡ÖÐ×´Ì¬
-	for (int i = 0; vec_chosed_soldier[country].size() != 0 && i <= vec_chosed_soldier[country].size() - 1; i++)
-	{
-		vec_chosed_soldier[country][i]->setTexture(vec_chosed_soldier[country][i]->texture_normal);
-		
-	}
-	vec_chosed_soldier[country].clear();
-	set_building[country] = 22;
-}
-
-void HelloWorld::menuItemmineCallback(cocos2d::Ref* pSender)//·¢ËÍ´´½¨Ò»¸ö¿ó³§µÄÇëÇó
-{
-	if (my_country == 1)
-		pClient->sendMessage("1B6$");
-	else if (my_country == 2)
-		pClient->sendMessage("2B6$");
-	else if (my_country == 3)
-		pClient->sendMessage("3B6$");
-	else if (my_country == 4)
-		pClient->sendMessage("4B6$");
-}
-void HelloWorld::button_mine(int country)//´´½¨¿ó³¡
-{
-	//ÏÈÈ¡ÏûËùÓÐ¼º·½µ¥Î»µÄÑ¡ÖÐ×´Ì¬
-	for (int i = 0; vec_chosed_soldier[country].size() != 0 && i <= vec_chosed_soldier[country].size() - 1; i++)
-	{
-		vec_chosed_soldier[country][i]->setTexture(vec_chosed_soldier[country][i]->texture_normal);
-		
-	}
-	vec_chosed_soldier[country].clear();
-	set_building[country] = 33;
-}
-
-void HelloWorld::menuItemfactoryCallback(cocos2d::Ref* pSender)//·¢ËÍ´´½¨Ò»¸öÕ½³µ¹¤³§µÄÇëÇó
-{
-	if (my_country == 1)
-		pClient->sendMessage("1B7$");
-	else if (my_country == 2)
-		pClient->sendMessage("2B7$");
-	else if (my_country == 3)
-		pClient->sendMessage("3B7$");
-	else if (my_country == 4)
-		pClient->sendMessage("4B7$");
-}
-void HelloWorld::button_factory(int country)//´´½¨Õ½³µ¹¤³§
-{
-	//ÏÈÈ¡ÏûËùÓÐ¼º·½µ¥Î»µÄÑ¡ÖÐ×´Ì¬
-	for (int i = 0; vec_chosed_soldier[country].size() != 0 && i <= vec_chosed_soldier[country].size() - 1; i++)
-	{
-		vec_chosed_soldier[country][i]->setTexture(vec_chosed_soldier[country][i]->texture_normal);
-		
-	}
-	vec_chosed_soldier[country].clear();
-	set_building[country] = 44;
-}
 int cnt_health_waiting = 0;
 void HelloWorld::updateHealth(float dt)//ÑªÁ¿¼à²â
 {
@@ -1746,17 +1684,17 @@ void HelloWorld::initmenu()//³õÊ¼»¯ÓÒ²àÅÔÀ¸
 	this->addChild(building4, 11);
 	vec_buimenu.pushBack(building4);
 
-	sol_menu* solmenu1 = sol_menu::create(0);//µÚÒ»¸ö½¨ÖþµÄ²Ëµ¥
+	sol_menu* solmenu1 = sol_menu::create(0);//µÚÒ»¸ö±øÖÖµÄ²Ëµ¥
 	solmenu1->setPosition(solmenu1->position);
 	this->addChild(solmenu1, 11);
 	vec_solmenu.pushBack(solmenu1);
 
-	sol_menu* solmenu2 = sol_menu::create(1);//µÚÒ»¸ö½¨ÖþµÄ²Ëµ¥
+	sol_menu* solmenu2 = sol_menu::create(1);//µÚ¶þ¸ö±øÖÖµÄ²Ëµ¥
 	solmenu2->setPosition(solmenu2->position);
 	this->addChild(solmenu2, 11);
 	vec_solmenu.pushBack(solmenu2);
 
-	sol_menu* solmenu3 = sol_menu::create(2);//µÚÒ»¸ö½¨ÖþµÄ²Ëµ¥
+	sol_menu* solmenu3 = sol_menu::create(2);//µÚÈý¸ö±øÖÖµÄ²Ëµ¥
 	solmenu3->setPosition(solmenu3->position);
 	this->addChild(solmenu3, 11);
 	vec_solmenu.pushBack(solmenu3);
@@ -1764,12 +1702,12 @@ void HelloWorld::initmenu()//³õÊ¼»¯ÓÒ²àÅÔÀ¸
 
 	//µçÁ¦À¸
 	auto bar = Sprite::create("menu/elec2.png");
-	bar->setPosition(building1->position + Vec2(-25, -80));
+	bar->setPosition(building1->position + Vec2(-50, -170));
 	bar->setName("elecbar");
 	this->addChild(bar, 12);
 	auto blood = Sprite::create("menu/elec1.png");
 	ProgressTimer* elecblood = ProgressTimer::create(blood);
-	elecblood->setPosition(building1->position + Vec2(-25, -80));
+	elecblood->setPosition(building1->position + Vec2(-50, -170));
 	elecblood->setType(ProgressTimer::Type::BAR);
 	//´ÓÏÂµ½ÉÏ¼õÉÙµçÁ¿
 	elecblood->setMidpoint(Point(0, 0));     //Èç¹ûÊÇ´Ó×óµ½ÓÒµÄ»°£¬¸Ä³É(1,0.5)¼´¿É
@@ -1780,14 +1718,14 @@ void HelloWorld::initmenu()//³õÊ¼»¯ÓÒ²àÅÔÀ¸
 	//schedule(schedule_selector(HelloWorld::scheduleBlood), 0.1f);  //Ë¢ÐÂº¯Êý£¬Ã¿¸ô0.1Ãë
 
 	//½ðÇ®À¸
-	auto label1 = Label::createWithSystemFont("money:", "Arial", 8);
+	auto label1 = Label::createWithSystemFont("money:", "Arial", 20);
 	label1->setName("moneylabel");
-	label1->setPosition(building1->position + Vec2(5, 20));
+	label1->setPosition(building1->position + Vec2(0, 136));
 	label1->setColor(ccc3(255, 215, 0));
 	this->addChild(label1, 13);
-	cocos2d::String* num = String::createWithFormat("%d", money);
-	auto moneynum = Label::createWithSystemFont(num->getCString(), "Arial", 8);
-	moneynum->setPosition(building1->position + Vec2(30, 20));
+	cocos2d::String* num = String::createWithFormat("%d", money[my_country]);
+	auto moneynum = Label::createWithSystemFont(num->getCString(), "Arial", 20);
+	moneynum->setPosition(building1->position + Vec2(70, 135));
 	moneynum->setName("moneynum");
 	moneynum->setColor(ccc3(255, 215, 0));
 	this->addChild(moneynum, 13);
@@ -1913,12 +1851,12 @@ int HelloWorld::ifbuildsol(cocos2d::Vec2 pos, int country) //ÅÐ¶ÏÊÇ·ñµãÖÐ±øÖÖ²Ëµ
 			{
 				vec_solmenu.at(i)->num_tobuild[country]++;
 				money[country] -= vec_solmenu.at(i)->money;
-				elec[country] -= vec_solmenu.at(i)->elec;
+				//elec[country] -= vec_solmenu.at(i)->elec;
 				iftogo = 1;
 				if (my_country == country)
 				{
-					auto elecblood = (ProgressTimer *)this->getChildByName("elecblood");
-					elecblood->setPercentage(((float)elec[country] / electotal[country]) * 100);
+					//auto elecblood = (ProgressTimer *)this->getChildByName("elecblood");
+					//elecblood->setPercentage(((float)elec[country] / electotal[country]) * 100);
 					auto moneynum = (Label*)this->getChildByName("moneynum");
 					cocos2d::String* num1 = String::createWithFormat("%d", money[country]);
 					moneynum->setString(num1->getCString());
@@ -1992,6 +1930,10 @@ bool HelloWorld::create_a_electric(int country, cocos2d::Point tile_position) {
 		a_building->set_data(country, tile_position.x, tile_position.y);
 		createblood(a_building, 2);
 		_tileMap->addChild(a_building, 0);
+		if (if_there_is_effect)
+		{
+			CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("sound/construct.WAV");
+		}
 		vec_electric[country].push_back(a_building);
 		set_building[country] = 0;
 
@@ -2065,6 +2007,10 @@ bool HelloWorld::create_a_mine(int country, cocos2d::Point tile_position)
 		a_building->set_data(country, tile_position.x, tile_position.y);
 		createblood(a_building, 3);
 		_tileMap->addChild(a_building, 0);
+		if (if_there_is_effect)
+		{
+			CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("sound/construct.WAV");
+		}
 		vec_mine[country].push_back(a_building);
 		set_building[country] = 0;
 
@@ -2073,6 +2019,30 @@ bool HelloWorld::create_a_mine(int country, cocos2d::Point tile_position)
 		a_building->setPhysicsBody(a_body);
 		a_building->wall = a_body;
 
+		//´´½¨¿ó³µ
+		mine_car* car;
+		if(country==1)
+			car= mine_car::create("mine_car1.png");
+		else if (country == 2)
+			car = mine_car::create("mine_car2.png");
+		else if (country == 3)
+			car = mine_car::create("mine_car3.png");
+		else if (country == 4)
+			car = mine_car::create("mine_car4.png");
+		car->init(&HelloWorld::situation);
+		car->set_data(country, a_building, vec_mines[country]);
+		car->setPosition(a_building->getPosition() + cocos2d::Vec2(0, 30));
+		vec_mine_car[country].push_back(car);
+		_tileMap->addChild(car, 0);
+		car->schedule(schedule_selector(mine_car::updatecar1), 2.5f);
+		if (country == 1)
+			this->schedule(schedule_selector(HelloWorld::updatemoney1), 2.5f);
+		else if (country == 2)
+			this->schedule(schedule_selector(HelloWorld::updatemoney2), 2.5f);
+		else if (country == 3)
+			this->schedule(schedule_selector(HelloWorld::updatemoney3), 2.5f);
+		else if (country == 4)
+			this->schedule(schedule_selector(HelloWorld::updatemoney4), 2.5f);
 		//¸üÐÂsituation
 		a_building->change_situation(situation, 0);
 		return true;
@@ -2146,6 +2116,10 @@ bool HelloWorld::create_a_camp(int country, cocos2d::Point tile_position)
 		a_building->set_data(country, tile_position.x, tile_position.y);
 		createblood(a_building, 2);
 		_tileMap->addChild(a_building, 0);
+		if (if_there_is_effect)
+		{
+			CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("sound/construct.WAV");
+		}
 		if (vec_camp[country].empty())
 			major_camp[country] = a_building;
 		vec_camp[country].push_back(a_building);
@@ -2229,6 +2203,10 @@ bool HelloWorld::create_a_factory(int country, cocos2d::Point tile_position)
 		a_building->set_data(country, tile_position.x, tile_position.y);
 		createblood(a_building, 3);
 		_tileMap->addChild(a_building, 0);
+		if (if_there_is_effect)
+		{
+			CocosDenshion::SimpleAudioEngine::getInstance()->playEffect("sound/construct.WAV");
+		}
 		if (vec_factory[country].empty())
 			major_factory[country] = a_building;
 		vec_factory[country].push_back(a_building);
@@ -2337,7 +2315,74 @@ void HelloWorld::destruct_last_solbuild(int country,char c_or_f)
 		
 
 }
-
+void HelloWorld::updatemoney1(float dt)
+{
+	for (int i = 0; i < vec_mine_car[1].size(); i++)
+	{
+		if (vec_mine_car[1][i]->if_add == 2)
+		{
+			money[1] += 50;
+			vec_mine_car[1][i]->if_add = 0;
+		}
+	}
+	if (my_country == 1)
+	{
+		auto moneynum = (Label*)this->getChildByName("moneynum");
+		cocos2d::String* num1 = String::createWithFormat("%d", money[1]);
+		moneynum->setString(num1->getCString());
+	}
+}
+void HelloWorld::updatemoney2(float dt)
+{
+	for (int i = 0; i < vec_mine_car[2].size(); i++)
+	{
+		if (vec_mine_car[2][i]->if_add == 2)
+		{
+			money[2] += 50;
+			vec_mine_car[2][i]->if_add = 0;
+		}
+	}
+	if (my_country == 2)
+	{
+		auto moneynum = (Label*)this->getChildByName("moneynum");
+		cocos2d::String* num1 = String::createWithFormat("%d", money[2]);
+		moneynum->setString(num1->getCString());
+	}
+}
+void HelloWorld::updatemoney3(float dt)
+{
+	for (int i = 0; i < vec_mine_car[3].size(); i++)
+	{
+		if (vec_mine_car[3][i]->if_add == 2)
+		{
+			money[3] += 50;
+			vec_mine_car[3][i]->if_add = 0;
+		}
+	}
+	if (my_country == 3)
+	{
+		auto moneynum = (Label*)this->getChildByName("moneynum");
+		cocos2d::String* num1 = String::createWithFormat("%d", money[3]);
+		moneynum->setString(num1->getCString());
+	}
+}
+void HelloWorld::updatemoney4(float dt)
+{
+	for (int i = 0; i < vec_mine_car[4].size(); i++)
+	{
+		if (vec_mine_car[4][i]->if_add == 2)
+		{
+			money[4] += 50;
+			vec_mine_car[4][i]->if_add = 0;
+		}
+	}
+	if (my_country == 4)
+	{
+		auto moneynum = (Label*)this->getChildByName("moneynum");
+		cocos2d::String* num1 = String::createWithFormat("%d", money[4]);
+		moneynum->setString(num1->getCString());
+	}
+}
 cocos2d::Vec2 move_to_GLposition(unit* penemy, int enemy_type)
 {
 	if (enemy_type == 0)
@@ -2346,22 +2391,22 @@ cocos2d::Vec2 move_to_GLposition(unit* penemy, int enemy_type)
 	{
 		cocos2d::Point building_tile_position = tileCoordFromPosition(penemy->getPosition());
 		for (int i = building_tile_position.x; i <= building_tile_position.x + 1; i++) {
-			int j = XMAX*(building_tile_position.y - 1);
+			int j = imformation::XMAX*(building_tile_position.y - 1);
 			if (HelloWorld::situation[i + j] == 1)
 				return tileToGL(cocos2d::Point(i, building_tile_position.y - 1));
 		}
 		for (int i = building_tile_position.x - 1; i != building_tile_position.x + 2; i += 3) {
-			int j = XMAX*building_tile_position.y;
+			int j = imformation::XMAX*building_tile_position.y;
 			if (HelloWorld::situation[i + j] == 1)
 				return tileToGL(cocos2d::Point(i, building_tile_position.y));
 		}
 		for (int i = building_tile_position.x - 1; i != building_tile_position.x + 2; i += 3) {
-			int j = XMAX*(building_tile_position.y + 1);
+			int j = imformation::XMAX*(building_tile_position.y + 1);
 			if (HelloWorld::situation[i + j] == 1)
 				return tileToGL(cocos2d::Point(i, building_tile_position.y + 1));
 		}
 		for (int i = building_tile_position.x; i <= building_tile_position.x + 1; i++) {
-			int j = XMAX*(building_tile_position.y + 2);
+			int j = imformation::XMAX*(building_tile_position.y + 2);
 			if (HelloWorld::situation[i + j] == 1)
 				return tileToGL(cocos2d::Point(i, building_tile_position.y + 2));
 		}
@@ -2370,22 +2415,22 @@ cocos2d::Vec2 move_to_GLposition(unit* penemy, int enemy_type)
 	{
 		cocos2d::Point building_tile_position = tileCoordFromPosition(penemy->getPosition());
 		for (int i = building_tile_position.x - 1; i <= building_tile_position.x + 1; i++) {
-			int j = XMAX*(building_tile_position.y - 1);
+			int j = imformation::XMAX*(building_tile_position.y - 1);
 			if (HelloWorld::situation[i + j] == 1)
 				return tileToGL(cocos2d::Point(i, building_tile_position.y - 1));
 		}
 		for (int i = building_tile_position.x - 2; i != building_tile_position.x + 2; i += 4) {
-			int j = XMAX*building_tile_position.y;
+			int j = imformation::XMAX*building_tile_position.y;
 			if (HelloWorld::situation[i + j] == 1)
 				return tileToGL(cocos2d::Point(i, building_tile_position.y));
 		}
 		for (int i = building_tile_position.x - 2; i != building_tile_position.x + 2; i += 4) {
-			int j = XMAX*(building_tile_position.y + 1);
+			int j = imformation::XMAX*(building_tile_position.y + 1);
 			if (HelloWorld::situation[i + j] == 1)
 				return tileToGL(cocos2d::Point(i, building_tile_position.y + 1));
 		}
 		for (int i = building_tile_position.x - 1; i <= building_tile_position.x + 1; i++) {
-			int j = XMAX*(building_tile_position.y + 2);
+			int j = imformation::XMAX*(building_tile_position.y + 2);
 			if (HelloWorld::situation[i + j] == 1)
 				return tileToGL(cocos2d::Point(i, building_tile_position.y + 2));
 		}
@@ -2394,27 +2439,27 @@ cocos2d::Vec2 move_to_GLposition(unit* penemy, int enemy_type)
 	{
 		cocos2d::Point building_tile_position = tileCoordFromPosition(penemy->getPosition());
 		for (int i = building_tile_position.x - 1; i <= building_tile_position.x + 1; i++) {
-			int j = XMAX*(building_tile_position.y - 2);
+			int j = imformation::XMAX*(building_tile_position.y - 2);
 			if (HelloWorld::situation[i + j] == 1)
 				return tileToGL(cocos2d::Point(i, building_tile_position.y - 2));
 		}
 		for (int i = building_tile_position.x - 2; i != building_tile_position.x + 2; i += 4) {
-			int j = XMAX*(building_tile_position.y-1);
+			int j = imformation::XMAX*(building_tile_position.y-1);
 			if (HelloWorld::situation[i + j] == 1)
 				return tileToGL(cocos2d::Point(i, building_tile_position.y-1));
 		}
 		for (int i = building_tile_position.x - 2; i != building_tile_position.x + 2; i += 4) {
-			int j = XMAX*(building_tile_position.y);
+			int j = imformation::XMAX*(building_tile_position.y);
 			if (HelloWorld::situation[i + j] == 1)
 				return tileToGL(cocos2d::Point(i, building_tile_position.y));
 		}
 		for (int i = building_tile_position.x - 2; i != building_tile_position.x + 2; i += 4) {
-			int j = XMAX*(building_tile_position.y + 1);
+			int j = imformation::XMAX*(building_tile_position.y + 1);
 			if (HelloWorld::situation[i + j] == 1)
 				return tileToGL(cocos2d::Point(i, building_tile_position.y + 1));
 		}
 		for (int i = building_tile_position.x - 1; i <= building_tile_position.x + 1; i++) {
-			int j = XMAX*(building_tile_position.y + 2);
+			int j = imformation::XMAX*(building_tile_position.y + 2);
 			if (HelloWorld::situation[i + j] == 1)
 				return tileToGL(cocos2d::Point(i, building_tile_position.y + 2));
 		}
@@ -2450,8 +2495,10 @@ void soldier::popStepAndAnimate()
 		auto enemy_rect = enemy_target->getBoundingBox();
 		if (enemy_rect.intersectsCircle(this->getPosition(), this->attack_distance))
 		{
-			this->stopAllActions();
-			this->schedule(schedule_selector(soldier::updateAttack), attack_speed, kRepeatForever, 0.2f);
+			if (this->my_country != this->enemy_target->my_country) {
+				this->stopAllActions();
+				this->schedule(schedule_selector(soldier::updateAttack), attack_speed, kRepeatForever, 0.2f);
+			}
 		}
 	}
 	if (path.size() == 0)
@@ -2498,8 +2545,10 @@ void soldier::popStepAndAnimate()
 		auto enemy_rect = enemy_target->getBoundingBox();
 		if (enemy_rect.intersectsCircle(this->getPosition(),this->attack_distance))
 		{
-			this->stopAllActions();
-			this->schedule(schedule_selector(soldier::updateAttack), attack_speed, kRepeatForever, 0.2f);
+			if (this->my_country != this->enemy_target->my_country) {
+				this->stopAllActions();
+				this->schedule(schedule_selector(soldier::updateAttack), attack_speed, kRepeatForever, 0.2f);
+			}
 		}
 		else
 		{
