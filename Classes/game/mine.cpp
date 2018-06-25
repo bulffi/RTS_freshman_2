@@ -19,7 +19,7 @@ void mine::set_data(int country, int x, int y)//设置参数
 	this->tile_position_point[0] = x;
 	this->tile_position_point[1] = y;
 	my_country = country;
-	health = 20;
+	health = 15	;
 	beginhealth = health;
 	this->setAnchorPoint(cocos2d::Vec2(0.5, 0.75));
 }
@@ -57,7 +57,7 @@ void mine_car::set_data(int country, unit* mine, unit* mines)//设置参数
 {
 	my_mine = mine;
 	my_mines = mines;
-	move_speed = 250;
+	move_speed = 5;
 	my_country = country;
 	health = 50;
 	beginhealth = health;

@@ -70,9 +70,9 @@ public:
 	static void createblood(unit* s,int x);
 
 	//周泓光
-	int money[5] = { 99999,99999,99999,99999,99999 };//金钱
-	int elec[5] = { 1000,1000,1000,1000,1000 };//电量
-	int electotal[5] = { 1000,1000,1000,1000,1000 };//总电量
+	int money[5] = { 300,300,300,300,300 };//金钱
+	int elec[5] = { 100,100,100,100,100 };//电量
+	int electotal[5] = { 100,100,100,100,100 };//总电量
 	
 	int iftogo = -1, bui_lable = -1, sol_lable = -1;//操作是否继续
 	static cocos2d::Vector<build_menu*> vec_buimenu;//储存建筑菜单的容器

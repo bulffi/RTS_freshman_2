@@ -18,7 +18,7 @@ void electric::set_data(int country, int x, int y)//ÉèÖÃ²ÎÊý
 	this->tile_position_point[0] = x;
 	this->tile_position_point[1] = y;
 	my_country = country;
-	health = 20;
+	health = 15;
 	beginhealth = health;
 	this->setAnchorPoint(cocos2d::Vec2(0.25, 0.75));
 }

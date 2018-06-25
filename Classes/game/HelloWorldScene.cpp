@@ -846,7 +846,7 @@ void HelloWorld::update(float dt)//接收服务器消息
 			}
 		}
 	}
-	if (waiting_to_ask > 5 && imformation::am_i_host)
+	if (waiting_to_ask > 4 && imformation::am_i_host)
 	{
 		waiting_to_ask = 0;
 		std::string answer;
@@ -1271,7 +1271,12 @@ void HelloWorld::update(float dt)//接收服务器消息
 						}
 
 					}
-
+					elec[j] += vec_solmenu.at(2)->elec;
+					if (j == my_country)
+					{
+						auto elecblood = (ProgressTimer *)this->getChildByName("elecblood");
+						elecblood->setPercentage(((float)elec[j] / electotal[j]) * 100);
+					}
 					(*iter)->change_situation(situation, 1);
 					(*iter)->removeFromParent();
 					vec_camp[j].erase(iter);
@@ -1326,7 +1331,12 @@ void HelloWorld::update(float dt)//接收服务器消息
 								if (*iter == vec_tank[j2][i2]->enemy_target)
 									vec_tank[j2][i2]->enemy_target = NULL;
 						}
-
+					elec[j] += vec_solmenu.at(1)->elec;
+					if (j == my_country)
+					{
+						auto elecblood = (ProgressTimer *)this->getChildByName("elecblood");
+						elecblood->setPercentage(((float)elec[j] / electotal[j]) * 100);
+					}
 					(*iter)->change_situation(situation, 1);
 					(*iter)->removeFromParent();
 					vec_mine[j].erase(iter);
@@ -1365,7 +1375,16 @@ void HelloWorld::update(float dt)//接收服务器消息
 								if (*iter == vec_tank[j2][i2]->enemy_target)
 									vec_tank[j2][i2]->enemy_target = NULL;
 						}
-
+					elec[j] -= 400;
+					electotal[j] -= 400;
+					if (j = my_country)
+					{
+						auto elecblood = (ProgressTimer *)this->getChildByName("elecblood");
+						if (elec[j] < 0)
+							elecblood->setPercentage((float)0);
+						else
+							elecblood->setPercentage(((float)elec[j] / electotal[j]) * 100);
+					}
 					(*iter)->change_situation(situation, 1);
 					(*iter)->removeFromParent();
 					vec_electric[j].erase(iter);
@@ -1422,6 +1441,12 @@ void HelloWorld::update(float dt)//接收服务器消息
 								}
 						}
 
+					}
+					elec[j] += vec_solmenu.at(3)->elec;
+					if (j == my_country)
+					{
+						auto elecblood = (ProgressTimer *)this->getChildByName("elecblood");
+						elecblood->setPercentage(((float)elec[j] / electotal[j]) * 100);
 					}
 					(*iter)->change_situation(situation, 1);
 					(*iter)->removeFromParent();
@@ -1945,8 +1970,8 @@ bool HelloWorld::create_a_electric(int country, cocos2d::Point tile_position) {
 		//更新situation
 		a_building->change_situation(situation, 0);
 		//增加电量
-		electotal[country] += 500;
-		elec[country] += 500;
+		electotal[country] += 400;
+		elec[country] += 400;
 		if (my_country == country)
 		{
 			auto elecblood = (ProgressTimer *)this->getChildByName("elecblood");
@@ -2034,15 +2059,15 @@ bool HelloWorld::create_a_mine(int country, cocos2d::Point tile_position)
 		car->setPosition(a_building->getPosition() + cocos2d::Vec2(0, 30));
 		vec_mine_car[country].push_back(car);
 		_tileMap->addChild(car, 0);
-		car->schedule(schedule_selector(mine_car::updatecar1), 2.5f);
+		car->schedule(schedule_selector(mine_car::updatecar1), 2.2f,CC_REPEAT_FOREVER, 0);
 		if (country == 1)
-			this->schedule(schedule_selector(HelloWorld::updatemoney1), 2.5f);
+			this->schedule(schedule_selector(HelloWorld::updatemoney1), 2.2f);
 		else if (country == 2)
-			this->schedule(schedule_selector(HelloWorld::updatemoney2), 2.5f);
+			this->schedule(schedule_selector(HelloWorld::updatemoney2), 2.2f);
 		else if (country == 3)
-			this->schedule(schedule_selector(HelloWorld::updatemoney3), 2.5f);
+			this->schedule(schedule_selector(HelloWorld::updatemoney3), 2.2f);
 		else if (country == 4)
-			this->schedule(schedule_selector(HelloWorld::updatemoney4), 2.5f);
+			this->schedule(schedule_selector(HelloWorld::updatemoney4), 2.2f);
 		//更新situation
 		a_building->change_situation(situation, 0);
 		return true;
@@ -2533,7 +2558,7 @@ void soldier::popStepAndAnimate()
 	//assume speed=10;
 
 	double distance = sqrt(pow(diff.x, 2) + pow(diff.y, 2));
-	auto moveAction = cocos2d::MoveTo::create(distance / 10, positionForTileCoord(cocos2d::Point(tempt_x, tempt_y)));
+	auto moveAction = cocos2d::MoveTo::create(distance / move_speed, positionForTileCoord(cocos2d::Point(tempt_x, tempt_y)));
 	cocos2d::Point now_position = this->getPosition();
 	//cocos2d::CallFunc* move_to_call_back;
 	cocos2d::CallFunc* moveCallback;

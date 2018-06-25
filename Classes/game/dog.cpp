@@ -15,10 +15,10 @@ void dog::set_data(int country)
 {
 	this->setAnchorPoint(cocos2d::Vec2(0.5, 0.5));
 	my_country = country;
-	health = 15;
-	beginhealth = 15;
+	health = 9;
+	beginhealth = 9;
 	attack_power = 2;
-	move_speed = 8;
+	move_speed = 4;
 	attack_distance = 30;
 	attack_speed = 1.5f;
 	if (country == 1)

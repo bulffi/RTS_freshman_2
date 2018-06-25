@@ -19,7 +19,7 @@ base* base::create(const char* filename)
 void base::set_data(int country)//设置参数
 {
 	my_country = country;
-	health = 99;
+	health = 60;
 	beginhealth = health;
 }
 void base::change_situation(std::vector<int>& situation, int condition)//改变situation

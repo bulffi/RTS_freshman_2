@@ -15,12 +15,12 @@ void tank::set_data(int country)
 {
 	this->setAnchorPoint(cocos2d::Vec2(0.5, 0.5));
 	my_country = country;
-	health = 10;
-	beginhealth = 10;
-	attack_power = 1;
-	move_speed = 10;
-	attack_distance = 200;
-	attack_speed = 1.0f;
+	health = 15;
+	beginhealth =15;
+	attack_power =4;
+	move_speed = 5;
+	attack_distance = 160;
+	attack_speed = 2.2f;
 	if (country == 1)
 	{
 		texture_normal = cocos2d::Director::getInstance()->getTextureCache()->addImage("tank1.png");

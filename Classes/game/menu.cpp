@@ -30,21 +30,29 @@ build_menu* build_menu::create(int num)//构造函数
 			{
 				posy = 2.1;
 				posx = 1.9;
+				sprite->elec = 0;
+				sprite->money = 100;
 			}
 			else if (num == 1)
 			{
 				posy = 2.1;
 				posx = 0.85;
+				sprite->elec = 100;
+				sprite->money = 100;
 			}
 			else if (num == 2)
 			{
 				posy = 3.15;
 				posx = 1.9;
+				sprite->elec = 150;
+				sprite->money = 150;
 			}
 			else if (num == 3)
 			{
 				posy = 3.15;
 				posx = 0.85;
+				sprite->elec = 200;
+				sprite->money = 150;
 			}
 			sprite->position =cocos2d::Vec2(origin.x - sprite->getContentSize().width * posx + visibleSize.width + 10, origin.y - sprite->getContentSize().height * posy + visibleSize.height - 5);
 			
@@ -96,14 +104,31 @@ void build_menu::cretimer(int my_country,int country)//创建菜单CD条,造兵
 		else
 			layer->addChild(shade, 10);
 		ifready[country] = 0;
+		float speed = 0;
+		if (lable == 0)
+		{
+			speed = 0.05;
+		}
+		else if (lable == 1)
+		{
+			speed = 0.05;
+		}
+		else if (lable == 2)
+		{
+			speed = 0.06;
+		}
+		else if (lable == 3)
+		{
+			speed = 0.08;
+		}
 		if(country==1)
-		    this->schedule(schedule_selector(build_menu::updateload1), 0.05f);
+		    this->schedule(schedule_selector(build_menu::updateload1), speed);
 		else if(country==2)
-			this->schedule(schedule_selector(build_menu::updateload2), 0.05f);
+			this->schedule(schedule_selector(build_menu::updateload2), speed);
 		else if (country == 3)
-			this->schedule(schedule_selector(build_menu::updateload3), 0.05f);
+			this->schedule(schedule_selector(build_menu::updateload3), speed);
 		else if (country == 4)
-			this->schedule(schedule_selector(build_menu::updateload4), 0.05f);
+			this->schedule(schedule_selector(build_menu::updateload4), speed);
 }
 void build_menu::updateload1(float dt)//用作建筑刷新
 {
@@ -230,14 +255,17 @@ sol_menu* sol_menu::create(int num)//构造函数
 		if (num == 0)
 		{
 			kx = 2.0, ky = 5;
+			sprite->money = 30;
 		}
 		else if (num == 1)
 		{
 			kx = 0.9, ky = 5;
+			sprite->money = 30;
 		}
 		else if (num == 2)
 		{
 			kx = 2.0, ky = 6.05;
+			sprite->money = 100;
 		}
 		sprite->position = cocos2d::Vec2(origin.x - sprite->getContentSize().width * kx + visibleSize.width + 10, origin.y - sprite->getContentSize().height * ky + visibleSize.height - 5);
 		return sprite;
@@ -249,7 +277,7 @@ void sol_menu::recreate(int my_country, int country)
 {
 	if (my_country == country)
 	{
-		cocos2d::String* picture = String::createWithFormat("menu/redalert0.%d.png", lable);
+		cocos2d::String* picture = String::createWithFormat("menu/redalert3.%d.png", lable);
 		CCTexture2D* texture = CCTextureCache::sharedTextureCache()->addImage(picture->getCString());
 		this->setTexture(texture);
 	}
@@ -346,14 +374,26 @@ void sol_menu::cretimer(int my_country, int country)//创建菜单CD条,造兵
 		layer->addChild(shade, 20);
 	else
 		layer->addChild(shade, 10);
+	float speed = 0;
+	float time;
+	if (lable == 1||lable==0)
+	{
+		speed = 4;
+		time = 3 / (2 + HelloWorld::vec_camp[country].size())*speed/100;
+	}
+	else if (lable == 2)
+	{
+		speed = 6;
+		time = 3 / (2 + HelloWorld::vec_factory[country].size())*speed/100;
+	}
 	if (country == 1)
-		this->schedule(schedule_selector(sol_menu::updateload1), 0.05f);
+		this->schedule(schedule_selector(sol_menu::updateload1), time);
 	else if (country == 2)
-		this->schedule(schedule_selector(sol_menu::updateload2), 0.05f);
+		this->schedule(schedule_selector(sol_menu::updateload2), time);
 	else if (country == 3)
-		this->schedule(schedule_selector(sol_menu::updateload3), 0.05f);
+		this->schedule(schedule_selector(sol_menu::updateload3), time);
 	else if (country == 4)
-		this->schedule(schedule_selector(sol_menu::updateload4), 0.05f);
+		this->schedule(schedule_selector(sol_menu::updateload4), time);
 }
 void sol_menu::updateload1(float dt)//用作兵种刷新
 {

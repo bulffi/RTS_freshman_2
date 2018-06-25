@@ -15,12 +15,12 @@ void people::set_data(int country)
 {
 	this->setAnchorPoint(cocos2d::Vec2(0.5, 0.5));
 	my_country = country;
-	health = 10;
-	beginhealth = 10;
-	attack_power = 1;
-	move_speed = 5;
-	attack_distance = 150;
-	attack_speed = 1.0f;
+	health = 7;
+	beginhealth = 7;
+	attack_power = 2;
+	move_speed = 3;
+	attack_distance = 120;
+	attack_speed = 2.0f;
 	if (country == 1)
 	{
 		texture_normal = cocos2d::Director::getInstance()->getTextureCache()->addImage("people1.png");

@@ -44,7 +44,7 @@ bool loadingScene::init()
 
 	//tilemap = TMXTiledMap::create("map2/test.tmx");
 	//addChild(tilemap, 0, 100);
-
+	return true;
 }
 void loadingScene::onClickCallBack(Ref* pSender)
 {
